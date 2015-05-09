@@ -30,8 +30,31 @@ function template()
 	}
 	else
 	{
-		show_error();
+		show_error("We Havent Template","404",$heading="Undefined Template - @philtyphils");
 		return false;
 	}
 	
 }
+function encode($str)
+{
+	$CI=& get_instance();
+	$CI->load->library('encrypt');
+	$str_encode = $CI->encrypt->encode($str);
+	$str 		= str_replace(array('+','/','='),array('-','_','.'),$str_encode);
+	return $str;
+	
+}
+
+ function decode($str)
+{
+	$CI=& get_instance();
+	$CI->load->library('encrypt');
+	$data = str_replace(array('-','_','.'),array('+','/','='),$str);
+	$mod4 = strlen($data) % 4;
+	if ($mod4) {
+		$data .= substr('====', $mod4);
+	}
+	$str_decode = $CI->encrypt->decode($data);
+	return $str_decode;
+}
+

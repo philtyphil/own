@@ -9,16 +9,16 @@
     <meta name="author" content="Sulistyo Nur Anggoro - @philtyphils - philtyphils@gmail.com">
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="assets/<?php echo $template;?>/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/<?php echo $template;?>/css/fonts.css">
-	<link rel="stylesheet" href="assets/<?php echo $template;?>/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="<?php echo config_item('base_url');?>assets/<?php echo $template;?>/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<?php echo config_item('base_url');?>assets/<?php echo $template;?>/css/fonts.css">
+	<link rel="stylesheet" href="<?php echo config_item('base_url');?>assets/<?php echo $template;?>/font-awesome/css/font-awesome.min.css">
 	
 	<!-- PAGE LEVEL PLUGINS STYLES -->
 	<!-- REQUIRE FOR SPEECH COMMANDS -->
-	<link rel="stylesheet" type="text/css" href="assets/<?php echo $template;?>/css/plugins/gritter/jquery.gritter.css" />	
+	<link rel="stylesheet" type="text/css" href="<?php echo config_item('base_url');?>assets/<?php echo $template;?>/css/plugins/gritter/jquery.gritter.css" />	
 
     <!-- Tc core CSS -->
-	<link id="qstyle" rel="stylesheet" href="assets/<?php echo $template;?>/css/themes/style.css">
+	<link id="qstyle" rel="stylesheet" href="<?php echo config_item('base_url');?>assets/<?php echo $template;?>/css/themes/style.css">
 	
 	
     <!-- Add custom CSS here -->
@@ -68,9 +68,9 @@
 							<div class="clearfix"></div>
 						</div>				
 						
-						<span style="margin-left:45%;display:none;"><img alt="loading" src="<?php echo config_item('loading');?>"/></span>
+						<span style="margin-left:45%;display:none;" id="loading"><img alt="loading" src="<?php echo config_item('loading');?>"/></span>
 						<div class="social-or-login">
-							<span class="text-primary">&nbsp;</span>
+							<span class="text-primary" id="error_text">&nbsp;</span>
 						</div>
 							
 						<div class="space-4"></div>
@@ -117,6 +117,7 @@
 	<!-- initial page level scripts for examples -->	
 	<script type="text/javascript">
 		$("#login").bind('click',function(){
+			$("#loading").fadeIn('slow');
 			var url 	= "<?php echo config_item('base_url')."login/proses";?>";
 			var data	= {
 				username : $("#username").val(),
@@ -128,7 +129,28 @@
 				data	: data,
 				dataType: "JSON",
 				success	: function(e){
-					console.log(e);
+					$("#loading").fadeOut('slow');
+					if(typeof(e.error_username) != "undefined" && e.error_username != "" && e.error_username.length > 0)
+					{
+						$("#error_text").html(e.error_username);
+					}
+					
+					if(typeof(e.error_password) != "undefined" && e.error_password != "" && e.error_password.length > 0)
+					{
+						$("#error_text").html(e.error_password);
+					}
+					
+					if(typeof(e.error_failed) != "undefined" && e.error_failed != "" && e.error_failed.length > 0)
+					{
+						$("#error_text").html(e.error_failed);
+					}
+					
+					if(typeof(e.success) != "undefined" && e.success != "" && e.success.length > 0)
+					{
+						$("#error_text").html(e.success);
+						window.location.href="<?php echo config_item('base_url');?>home";
+					}
+					
 				}
 			});
 		

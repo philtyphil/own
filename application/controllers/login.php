@@ -12,6 +12,7 @@ class Login extends CI_Controller {
 	
 	public function index()
 	{
+		$this->load->library('menuroleaccess');
 		$view['template'] = template();
 		$this->load->view(template().'/login.html',$view);
 	}
@@ -19,8 +20,8 @@ class Login extends CI_Controller {
 	public function proses()
 	{
 		$this->load->library('form_validation');
-	
-		$this->form_validation->set_rules('username', 'Username', 'trim|required|alpha_numeric|min_lenth[4]|xss_clean');
+
+		$this->form_validation->set_rules('username', 'Username', 'trim|required|alpha_numeric|min_length[3]');
 		$this->form_validation->set_rules('password', 'Password', 'trim|required');
 		
 		if($this->form_validation->run() == FALSE)
@@ -36,11 +37,21 @@ class Login extends CI_Controller {
 		else
 		{
 			$this->load->model('login_model');
-			if($data)
-			{
-				$view['notif'] = "Add User Success";
-			}
+			$username = $this->input->post('username');
+			$password = $this->input->post('password');
+			$doLogin  = $this->login_model->doLogin($username,$password);
 			
+			if($doLogin)
+			{
+				$this->load->library('sess');
+				$this->sess->sess_reg($doLogin);
+				$view['success'] = "Success Login";
+				
+			}
+			else
+			{
+				$view['error_failed'] = "username or password WRONG!";
+			}
 		}
 		header('content-type:application/json');
 		echo json_encode($view);
