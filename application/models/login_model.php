@@ -4,18 +4,20 @@ class Login_model extends CI_Model{
 	function __construct()
 	{
 		parent::__construct();
-		$this->db = $this->load->database('default', TRUE);
+		$this->db2 = $this->load->database('user',true);
 	}
 	
 	function doLogin($username,$password)
 	{
-	
-		$this->db->where('username',$username);
-		$this->db->where('password',md5($password));
-		$this->db->limit('1');
-		$this->db->select('*');
-		$this->db->from('bgr_user');
-		$data = $this->db->get()->result_array();
+		
+		$crypt = crypt($password,'$1$ismail--$');
+		$this->db2->where('username',$username);
+		$this->db2->where('userpass',$crypt);
+		$this->db2->limit('1');
+		$this->db2->select('*');
+		$this->db2->from('datuser');
+		$this->db2->join('datusergrp','datusergrp.datusergrpid=datuser.fld_bgrsdmgrp','left');
+		$data = $this->db2->get()->result_array();
 		return $data;
 	}
 	

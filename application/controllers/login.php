@@ -6,7 +6,6 @@ class Login extends CI_Controller {
 	{
 		parent::__construct();
 		
-		
 		header('content-type:text/html;charset=utf-8');
 	}
 	
@@ -57,6 +56,14 @@ class Login extends CI_Controller {
 		echo json_encode($view);
 		exit();
 		
+	}
+	
+	function logout()
+	{
+		$this->load->helper('url');
+		$this->session->sess_destroy();
+		$view['template'] = template();
+		redirect(config_item('base_url'));
 	}
 	
 }

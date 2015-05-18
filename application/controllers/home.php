@@ -1,11 +1,15 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 class Home extends CI_Controller {
-	public $raw;
+	public $data;
 	public function __construct()
 	{
 		parent::__construct();
+		$this->data =  array(
+			'template' => template(),
+			'base_url' => config_item('base_url'),
 		
+		);
 		if(!$this->session->userdata('logged'))
 		{
 			show_error('Dissalowed Page',"404",$heading = "Autherized is failed");
@@ -18,8 +22,14 @@ class Home extends CI_Controller {
 		$this->load->helper('url');
 		$this->load->library('menuroleaccess');
 		$auth_page = $this->menuroleaccess->check_access("home");
-		if($auth_page)
+		if($auth_page) 
 		{
+			/** Success Login **/
+			$data['sForm'] 		= "home";
+			$data['title'] 		= "HOME - Bhana Ghana Reksa";
+			$data['breadcumb']	= array('home' => "Landing Page");
+			
+			render('home',$data);
 			
 		}
 		else

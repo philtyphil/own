@@ -1,0 +1,94 @@
+<div class="row">
+	<div class="col-lg-12">
+		<div class="portlet">
+		<div class="portlet-heading dark">
+			<div class="portlet-title">
+				<h4>Absensi Pegawai</h4>
+			</div>
+			<div class="portlet-widgets">
+				
+				<a data-toggle="collapse" data-parent="#accordion" href="#ft-1"><i class="fa fa-chevron-down"></i></a>
+			
+			</div>
+			<div class="clearfix"></div>
+		</div>
+		<div id="ft-1" class="panel-collapse collapse in">
+			<div class="portlet-body">
+				<form class="form-horizontal" role="form" method="post">
+					
+					<div class="form-group">
+						<label class="col-sm-2 control-label">NIP</label>
+						<div class="col-sm-4">
+							
+							<input id="nip" type="text" class="form-control" maxlength="25" value="<?php echo $this->session->userdata('fld_empnik');?>" readonly/>
+							<span class="help-block"><code>Nomor Induk Pegawai</code></span>
+							
+						</div>
+					</div>
+					
+					
+					<?php if(in_array($this->session->userdata('datusergrpid'),	array("1"),true)):?>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Nama</label>
+						<div class="col-sm-4">
+						
+							<select class="form-control nama_user" id="nama_list">
+							<?php foreach($pegawai as $key => $value):?>
+								
+								<option value="<?php echo $value['fld_empnik'];?>"><?php echo $value['fld_empnm'];?></option>
+							<?php endforeach;?>
+							</select>
+						</div>
+					</div>
+					<?php else: ?>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Nama</label>
+						<div class="col-sm-4">
+							<input id="username" type="text" class="form-control" maxlength="25" value="<?php echo ucfirst($this->session->userdata('fld_empnm'));?>" readonly/>
+							<span class="help-block"><code>Username</code></span>
+						</div>
+					</div>
+					<?php endif;?>
+					<div class="form-group">
+						<label class="col-sm-2 control-label">Form Penccarian</label>
+						<div class="col-sm-3">
+							<?php $selected = "";?>
+							<select class="form-control selectpicker" id="bulan">
+							
+							
+							<?php foreach($tanggal as $key => $value): ?>
+							<?php if($key == date("m")):?>
+							<?php $selected = "selected";?>
+							<?php endif;?>
+							<option value='<?php echo $key;?>' <?php echo $selected;?>><?php echo $value;?></option>
+							<?php $selected = "";?>
+							<?php endforeach; ?>
+							</select>
+
+						</div>
+						<div class="col-sm-3">
+							<input type="text" id="tahun" value="<?php echo date("Y");?>" />
+						</div>
+					</div>
+					<div class="form-actions">
+						<div class="form-group">
+							<div class="col-sm-offset-2 col-sm-9">
+								<button class="btn  btn-primary" type="button" onclick="cari_click()"><i class="fa fa-search"></i>	Cari </button>
+								<button class="btn " type="button">Cancel</button>
+								
+							</div>
+						</div>
+					</div>
+						
+					
+				</form>
+			</div>
+		</div>
+	</div>
+							
+		
+	</div>
+</div>	
+<div id="loading" style="display:none;margin-left:49.5%;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="{base_url}assets/img/loading.gif" alt="loading"/><br/><span class="text-center">Receiving Data</span></div>
+<div id="load_absensi"></div>
+
