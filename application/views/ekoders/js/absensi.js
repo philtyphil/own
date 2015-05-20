@@ -31,3 +31,22 @@ function cari_click()
 		}
 	});
 }
+
+function nama_clicked()
+{
+	var nama = $("#username").val();
+	$("#nip").val(nama);
+}
+
+function cancel()
+{
+	window.location.href="{base_url}home";
+}
+
+function print_excel()
+{
+	var tahun = $("#tahun").val();
+	var bulan = $("#bulan").val();
+	var nip = $("#nip").val();
+	window.open("{base_url}adm_kepegawaian/print_excel/"+nip+"/"+bulan+"/"+tahun,"Print Excel Absensi","width=200, height=100");
+}
