@@ -50,3 +50,19 @@ function print_excel()
 	var nip = $("#nip").val();
 	window.open("{base_url}adm_kepegawaian/print_excel/"+nip+"/"+bulan+"/"+tahun,"Print Excel Absensi","width=200, height=100");
 }
+
+function print_pdf()
+{
+	var tahun = $("#tahun").val();
+	var bulan = $("#bulan").val();
+	var nip = $("#nip").val();
+	window.open("{base_url}adm_kepegawaian/print_pdf/"+nip+"/"+bulan+"/"+tahun,"Print Excel Absensi","width=400, height=400");
+}
+
+function print_html()
+{
+	var tahun = $("#tahun").val();
+	var bulan = $("#bulan").val();
+	var nip = $("#nip").val();
+	window.open("{base_url}adm_kepegawaian/print_html/"+nip+"/"+bulan+"/"+tahun,"_blank");
+}

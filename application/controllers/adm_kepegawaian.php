@@ -186,6 +186,36 @@ class Adm_kepegawaian extends CI_Controller {
 			show_error("Auth Failed To Print",'502',$heading = "AUTH PRINT EXCEL FAILED");
 		}
 	}
+	
+	public function print_pdf()
+	{	
+		$this->load->library('outpdf');$this->load->model('absensi_model');
+		$nip 		= $this->uri->segment(3);
+		$bulan 		= $this->uri->segment(4);
+		$tahun 		= $this->uri->segment(5);
+		$tanggal 	= $tahun."-".$bulan."-01";
+		$max_date 	= date('t',strtotime($tanggal));
+		$data		= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
+		$cetak 		= cetak_absen($nip,$bulan,$tahun,$data);
+		$pdf 		= new Outpdf();
+		$pdf->out($cetak, FALSE, 'absensi_bulanan.pdf', 'P');
+		exit();
+	}
+	
+	public function print_html()
+	{
+		
+		$this->load->model('absensi_model');
+		$nip 		= $this->uri->segment(3);
+		$bulan 		= $this->uri->segment(4);
+		$tahun 		= $this->uri->segment(5);
+		$tanggal 	= $tahun."-".$bulan."-01";
+		$max_date 	= date('t',strtotime($tanggal));
+		$data		= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
+		$cetak 		= cetak_absen($nip,$bulan,$tahun,$data);
+		echo $cetak;
+		die();
+	}
 }
 /* End of file home.php */
 /* Location: ./application/controllers/home.php */
