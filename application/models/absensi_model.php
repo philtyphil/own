@@ -12,11 +12,11 @@ class Absensi_model extends CI_Model{
 		$SQL = "SELECT r.date, 
 				r.jam_datang, 
 				r.jam_pulang,
-				CASE WHEN r.jam_datang > '08:00:00' THEN (
-				sec_to_time(time_to_sec(r.jam_datang) - time_to_sec('08:00:00'))
+				CASE WHEN r.jam_datang > '08:15:00' THEN (
+				sec_to_time(time_to_sec(r.jam_datang) - time_to_sec('08:15:00'))
 				) END as TL,
-				CASE WHEN r.jam_pulang < '18:00:00' AND r.jam_pulang is not null THEN (
-				sec_to_time(time_to_sec('18:00:00') - time_to_sec(r.jam_pulang))
+				CASE WHEN r.jam_pulang < '17:00:00' AND r.jam_pulang is not null THEN (
+				sec_to_time(time_to_sec('17:00:00') - time_to_sec(r.jam_pulang))
 				) END  as PSW
  FROM (
 		SELECT 

@@ -133,7 +133,7 @@ EOT;
 	}
   
   
-	$string .= "</tbody></table>";
+	$string .= "</tbody></table><br/><br/><small>*dicetak pada tanggal: ".date("d M Y H:i:s")."<small>";
  
   
         return $string;

@@ -11,7 +11,7 @@ class Adm_kepegawaian extends CI_Controller {
 		);
 		if(!$this->session->userdata('logged'))
 		{
-			show_error('Dissalowed Page',"404",$heading = "Autherized is failed");
+			show_error('Dissalowed Page',"404",$heading = "Autherized is failed. No Page Found!");
 		}
 		header('content-type:text/html;charset=utf-8');
 	}
@@ -49,7 +49,7 @@ class Adm_kepegawaian extends CI_Controller {
 	{
 		$data['data'] 	= ""; 
 		$this->load->library('form_validation');
-		$this->form_validation->set_rules('nip', 'NIP', 'trim|required|alpha_numeric|min_length[3]n');
+		$this->form_validation->set_rules('nip', 'NIP', 'trim|required|alpha_numeric|min_length[3]');
 		$this->form_validation->set_rules('bulan', 'Bulan', 'trim|required|max_length[3]');
 		$this->form_validation->set_rules('tahun', 'Tahun', 'trim|required|numeric|max_length[5]');
 		
@@ -93,6 +93,93 @@ class Adm_kepegawaian extends CI_Controller {
 		
 	}
 	
+	public function insert()
+	{
+		$this->load->library('menuroleaccess');
+		$auth_page = $this->menuroleaccess->check_access("adm_kepegawaian");
+		if($auth_page && $this->input->post())
+		{
+			$this->load->library('form_validation');
+			$this->form_validation->set_rules('nip', 'NIP', 'trim|required|min_length[5]');
+			$this->form_validation->set_rules('tanggal', 'Tanggal', 'trim|required');
+			$this->form_validation->set_rules('jam_datang', 'Jam Datang', 'trim|required|max_length[5]|callback_check_time');
+			$this->form_validation->set_rules('jam_pulang', 'Jam Pulang', 'trim|required|max_length[5]|callback_check_time');
+			
+			if($this->form_validation->run() == FALSE)
+			{
+				if(validation_errors('nip')!=NULL){
+					$view['error_nip'] = strip_tags(form_error('nip'));
+				}
+				if(validation_errors('tanggal')!=NULL){
+					$view['error_tanggal'] = strip_tags(form_error('tanggal'));
+				}
+				if(validation_errors('jam_datang')!=NULL){
+					$view['error_jam_datang'] = strip_tags(form_error('jam_datang'));
+				}
+				if(validation_errors('jam_pulang')!=NULL){
+					$view['error_jam_pulang'] = strip_tags(form_error('jam_pulang'));
+				}
+				
+			}
+			else
+			{
+				$dataInsert = array(
+					array(
+						"fld_empnik" => $this->input->post('nip'),
+						"fld_absensidt" => $this->input->post('tanggal'),
+						"fld_absensihr" => $this->input->post('jam_datang'),
+						"fld_absensity" => 1,
+						"fld_lup" => date("Y-m-d H:i:s")
+					),
+					array(
+						"fld_empnik" => $this->input->post('nip'),
+						"fld_absensidt" => $this->input->post('tanggal'),
+						"fld_absensihr" => $this->input->post('jam_pulang'),
+						"fld_absensity" => 2,
+						"fld_lup" => date("Y-m-d H:i:s")
+					)
+				);
+				$data = $this->db->insert_batch('tbl_absensi',$dataInsert);
+				$view['error_insert'] = "";
+				if(!$data)
+				{
+					$view['error_insert'] = "Insert Error";
+				}
+				else
+				{
+					
+					$tahun 		= date('Y',strtotime($this->input->post('tanggal')));
+					$bulan 		= date('m',strtotime($this->input->post('tanggal')));
+					$nip		= $this->input->post('nip');
+					$this->load->model('absensi_model');
+					$tanggal 	= $tahun."-".$bulan."-01";
+					$max_date 	= date('t',strtotime($tanggal));
+					$absensi_data 			= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
+					$buff['absensi_data'] 	= $absensi_data;
+					$buff['hari']			= array('Sunday' => "Minggu",'Monday' => "Senin", 'Tuesday'=>"Selasa",'Wednesday' => "Rabu",'Thursday' => "Kamis", 'Friday' => "Jumat",'Saturday' => "Sabtu");
+					$view['table_absensi']  = $this->parser->parse(template().'/jLoadpage/absensi_content.html',$buff);
+				}
+				
+			}
+			header('content-type:application/json');
+			echo json_encode($view);
+			exit();
+			
+		}
+	}
+	function check_time($str)
+	{
+		$data = preg_match('/^([0-9]{2}):([0-9]{2})/',$str);
+		if($data)
+		{
+			return true;
+		}
+		else
+		{
+			$this->form_validation->set_message('check_time', 'Format Jam Yang Anda Masukan Tidak Sesuai');
+			return false;
+		}
+	}
 	public function print_excel()
 	{
 		$nip 	= $this->uri->segment(3);
@@ -189,22 +276,30 @@ class Adm_kepegawaian extends CI_Controller {
 	
 	public function print_pdf()
 	{	
-		$this->load->library('outpdf');$this->load->model('absensi_model');
-		$nip 		= $this->uri->segment(3);
-		$bulan 		= $this->uri->segment(4);
-		$tahun 		= $this->uri->segment(5);
-		$tanggal 	= $tahun."-".$bulan."-01";
-		$max_date 	= date('t',strtotime($tanggal));
-		$data		= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
-		$cetak 		= cetak_absen($nip,$bulan,$tahun,$data);
-		$pdf 		= new Outpdf();
-		$pdf->out($cetak, FALSE, 'absensi_bulanan.pdf', 'P');
-		exit();
+		$this->load->library('menuroleaccess');
+		$auth_page = $this->menuroleaccess->check_access("adm_kepegawaian");
+		if($auth_page)
+		{
+			$this->load->library('outpdf');$this->load->model('absensi_model');
+			$nip 		= $this->uri->segment(3);
+			$bulan 		= $this->uri->segment(4);
+			$tahun 		= $this->uri->segment(5);
+			$tanggal 	= $tahun."-".$bulan."-01";
+			$max_date 	= date('t',strtotime($tanggal));
+			$data		= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
+			$cetak 		= cetak_absen($nip,$bulan,$tahun,$data);
+			$pdf 		= new Outpdf();
+			$pdf->out($cetak, FALSE, 'absensi_bulanan.pdf', 'P');
+			exit();
+		}
+		else
+		{
+			show_error("Auth Failed To Print",'502',$heading = "AUTH PRINT PDF FAILED");
+		}
 	}
 	
 	public function print_html()
 	{
-		
 		$this->load->model('absensi_model');
 		$nip 		= $this->uri->segment(3);
 		$bulan 		= $this->uri->segment(4);
@@ -214,7 +309,7 @@ class Adm_kepegawaian extends CI_Controller {
 		$data		= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
 		$cetak 		= cetak_absen($nip,$bulan,$tahun,$data);
 		echo $cetak;
-		die();
+		exit();
 	}
 }
 /* End of file home.php */
