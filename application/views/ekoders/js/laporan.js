@@ -1,41 +1,18 @@
 $( document ).ready(function() {
 	$('.selectpicker').selectpicker('show');
-	$('.nama_user').selectpicker('show');
-	$('.nama_user_insert').selectpicker('show');
-	
-	$('.form_time').datetimepicker({
-		weekStart: 1,
-		todayBtn:  1,
-		autoclose: 1,
-		todayHighlight: 1,
-		startView: 2,
-		minView: 2,
-		forceParse: 0
-	});
-	
-	$(".form_time_sec").datetimepicker({
-		weekStart: 1,
-		todayBtn:  1,
-		autoclose: 1,
-		todayHighlight: 1,
-		startView: 1,
-		minView: 0,
-		maxView: 1,
-		forceParse: 0
-		
-	});
+
 
 });
 
 function cari_click()
 {
+	$("#loading").fadeIn("slow");
 	$("#bulan_select").html($("#bulan").val());
 	var data = {
-		"nip" 	: $("#nip").val(),
-		"bulan"	: $("#bulan").val(),
-		"tahun"	: $("#tahun").val()
+		"lokasi" 	: $("#lokasi").val(),
+		"tahun"		: $("#tahun").val()
 	}
-	var url = "{base_url}adm_kepegawaian/search";
+	var url = "{base_url}laporan/search";
 	$.ajax({
 		type: "POST",
 		url: url,
@@ -43,23 +20,18 @@ function cari_click()
 		dataType: "JSON",
 		success: function(e){
 			$("#load_absensi").fadeOut("fast");
-			$("#loading").fadeIn("slow");
+		
 			setTimeout(function(){
 				$("#load_absensi").html(e.table_absensi);
 				$("#load_absensi").fadeIn("slow");
 				$("#loading").fadeOut("slow");
-			},2000);
+			},500);
 			
 			
 		}
 	});
 }
 
-function nama_clicked()
-{
-	var nama = $("#username").val();
-	$("#nip").val(nama);
-}
 
 function cancel()
 {

@@ -26,14 +26,14 @@ class Absensi_model extends CI_Model{
 		FROM
 		(
 		select
-					date_format(
-						adddate('$tahun-$bulan-01', @num:=@num+1),
-						'$tahun-$bulan-%d'
-					) date
-				from
-					tbl_absensi,    
-					(select @num:=-1) num
-				limit
+			date_format(
+					adddate('$tahun-$bulan-01', @num:=@num+1),
+					'$tahun-$bulan-%d'
+				) date
+			from
+				tbl_absensi,    
+				(select @num:=-1) num
+			limit
 					$max_date
 		) as A
 ) as r
@@ -71,6 +71,11 @@ class Absensi_model extends CI_Model{
 			
 		}
 		return $ret;
+		
+	}
+	
+	function get_absensi_rekap($lokasi,$bulan,$tahun)
+	{
 		
 	}
 	

@@ -332,15 +332,18 @@
 							</li>
 							<?php endif; ?>
 							<!-- BEGIN COMPONENTS DROPDOWN -->
+						
+							
+							<!-- :start Menu Data Kepegawaian -->
 							<?php if($this->session->userdata('VIEW_ADM_KEPEGAWAIAN_ACCESS') == 1):?>
 							<li class="panel">
 								<a href="javascript:;" data-parent="#side" data-toggle="collapse" class="accordion-toggle" data-target="#adm_kepegawaian">
-									<i class="fa fa-list"></i> Adm. Kepegawaian <span class="fa arrow"></span>
+									<i class="fa fa-list"></i> Administrasi <span class="fa arrow"></span>
 								</a>
 									<ul class="collapse nav" id="adm_kepegawaian">
 											<li>
 											<a href="{base_url}adm_kepegawaian/">
-												<i class="fa fa-angle-double-right"></i> DATA ABSENSI
+												<i class="fa fa-angle-double-right"></i> Kehadiran
 											</a>
 										</li>
 										<li>
@@ -353,14 +356,34 @@
 												<i class="fa fa-angle-double-right"></i> IZIN 
 											</a>
 										</li>
+										<li>
+											<a href="{base_url}adm_kepegawaian/ijin/">
+												<i class="fa fa-angle-double-right"></i> DINAS LUAR 
+											</a>
+										</li>
 									
 										
 										
 									</ul>
 							</li>
 							<?php endif;?>
-							<!-- END COMPONENTS DROPDOWN -->
+							<!-- :start Menu Status Pekerja -->
 							<?php if($this->session->userdata('VIEW_MANAGEMENT_SITE_ACCESS') == 1):?>
+							<li class="panel">
+								<a href="javascript:;" data-parent="#side" data-toggle="collapse" class="accordion-toggle" data-target="#Laporan">
+									<i class="fa fa-file"></i> Laporan <span class="fa arrow"></span>
+								</a>
+									<ul class="collapse nav" id="Laporan">
+										<li>
+											<a href="{base_url}laporan">
+												<i class="fa fa-angle-double-right"></i> Status Pekerja
+											</a>
+										</li>
+									</ul>
+							</li>
+							<?php endif;?>
+							<!-- :end Menu Status Pekerja -->
+							<?php if($this->session->userdata('VIEW_ADM_KEPEGAWAIAN_ACCESS') == 1):?>
 							<li class="panel">
 								<a href="javascript:;" data-parent="#side" data-toggle="collapse" class="accordion-toggle" data-target="#management_site">
 									<i class="fa fa-cogs"></i> Management Site <span class="fa arrow"></span>
@@ -374,6 +397,8 @@
 									</ul>
 							</li>
 							<?php endif;?>
+							<!-- :end Menu Data Kepegawaian -->
+							
 
 						</ul><!-- /.side-nav -->
 

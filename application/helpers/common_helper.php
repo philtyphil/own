@@ -148,6 +148,12 @@ function tanggal_to_read($time)
 {
 	return date('d M Y',strtotime($time));
 }
+function bulan_indonesia($tgl)
+{
+	$bln = array(''=>'','01' => "Januari",'02' => "Febuari", '03' => "Maret", '04' => "April",'05' => "Mei", '06' => "Juni", '07' => "July", '08'=> "Agustus", '09' => "September", '10' => "Oktober", '11' => "November", '12' => "Desember");
+	
+	return $bln[$tgl];
+}
 function bug($var)
 {
 	echo "<pre>";print_r($var);die(" <<<");
