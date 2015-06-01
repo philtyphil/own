@@ -2,11 +2,13 @@
 	<table id="laporan" class="datatable table table-hover table-striped table-bordered tc-table">
 		<thead>
 			<tr>
-				<th data-class="expand">Gol/Jenis Laporan</th>
-				<th data-hide="phone,tablet">Browser</th>
-				<th data-hide="phone,tablet">Platform(s)</th>
-				<th data-hide="phone,tablet">Engine version</th>
-				<th>CSS grade</th>
+				<th data-class="expand">Golongan</th>
+				<th data-hide="phone,tablet">NIK</th>
+				<th data-hide="phone,tablet">Nama Pegawai</th>
+				<th data-hide="phone,tablet">Jenis Kelamin</th>
+				<th data-hide="phone,tablet">Status Pegawai</th>
+				<th data-hide="phone,tablet">Lokasi</th>
+				<th data-hide="phone,tablet">Lokasi Kerja</th>
 			</tr>
 		</thead>
 		<tbody></tbody>
@@ -33,7 +35,7 @@ $(document).ready(function () {
         },
         "processing": true,
         "serverSide": true,
-		"ajax"		: '{base_url}laporan/rekap/{lokasi}/{tahun}',
+		"ajax"		: '{base_url}laporan/json/{lokasi}/{golongan}/{status_pegawai}/{tahun}',
 		// for more option please see http://datatables.net/examples/index
 		
         preDrawCallback: function () {

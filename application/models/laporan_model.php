@@ -39,8 +39,16 @@ class Laporan_model extends CI_Model{
 		
 	}
 	
-	function data_pegawai_datatable($lokasi,$tahun)
+	/**
+	 * [[Description]]
+	 * @param [[Type]] $lokasi         Lokasi Pegawai
+	 * @param [[Type]] $golongan       Golongan pegawai (yg akan di tampilkan)
+	 * @param [[Type]] $status_pegawai status Pegawai Contoh Pegawai Tetap
+	 * @param [[Type]] $tahun          tahun
+	 */
+	function data_pegawai_datatable($lokasi,$golongan,$status_pegawai,$tahun)
 	{
+		
 		
 	}
 	
@@ -54,22 +62,21 @@ class Laporan_model extends CI_Model{
 	{
 		$the_Query = "SELECT 
 						A.fld_tyvalnm AS golongan,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE stspeg = 'Pensiun' AND gol = A.fld_tyvalnm) as pensiun,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE gol = A.fld_tyvalnm AND stspeg = 'Pegawai Tetap (PKWTT)') AS jml_golongan,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE gol = A.fld_tyvalnm AND stskel = 'T/K' AND stspeg = 'Pegawai Tetap (PKWTT)') AS TK,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE gol = A.fld_tyvalnm AND stskel = 'K/0' AND stspeg = 'Pegawai Tetap (PKWTT)') AS K0,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE gol = A.fld_tyvalnm AND stskel = 'K/1' AND stspeg = 'Pegawai Tetap (PKWTT)') AS K1,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE gol = A.fld_tyvalnm AND stskel = 'K/2' AND stspeg = 'Pegawai Tetap (PKWTT)') AS K2,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE gol = A.fld_tyvalnm AND stskel = 'K/3' AND stspeg = 'Pegawai Tetap (PKWTT)') AS K3,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE gol = A.fld_tyvalnm AND TIMESTAMPDIFF(YEAR,fld_empddwrk,now()) <= 10 AND stspeg = 'Pegawai Tetap (PKWTT)') AS dibwh10thn,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE gol = A.fld_tyvalnm AND TIMESTAMPDIFF(YEAR,fld_empddwrk,now()) > 10 AND stspeg = 'Pegawai Tetap (PKWTT)') AS diats10thn
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE stspeg = 'Pensiun' AND id_golongan = A.fld_tyvalid AND id_lokasi = '$lokasi') as pensiun,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_lokasi = '$lokasi') AS jml_golongan,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_status_keluarga = '94' AND id_lokasi = '$lokasi') AS TK,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_status_keluarga = '95' AND id_lokasi = '$lokasi' ) AS K0,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_status_keluarga = '96' AND id_lokasi = '$lokasi' ) AS K1,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_status_keluarga = '97' AND id_lokasi = '$lokasi') AS K2,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_status_keluarga = '98' AND id_lokasi = '$lokasi') AS K3,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND TIMESTAMPDIFF(YEAR,fld_empddwrk,now()) <= 10  AND id_lokasi = '$lokasi') AS dibwh10thn,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND TIMESTAMPDIFF(YEAR,fld_empddwrk,now()) > 10   AND id_lokasi = '$lokasi') AS diats10thn
 						
 						FROM
 						(
 						
-						SELECT fld_tyvalnm FROM tbl_tyval
-						WHERE fld_tyvalid < '112'
-						AND fld_tyvalid > '99'
+						SELECT fld_tyvalid,fld_tyvalnm FROM tbl_tyval
+						WHERE fld_tyid= '24'
 						) AS A";
 		
 		$db	= $this->db->query($the_Query);
@@ -82,6 +89,33 @@ class Laporan_model extends CI_Model{
 			return false;
 		}
 		
+	}
+	
+	function get_golongan()
+	{
+		$data = $this->db->select('fld_tyvalid,fld_tyvalnm')->where('fld_tyid',"24")->order_by('fld_tyvalid',"ASC")->get('tbl_tyval');
+		
+		if($data->num_rows > 0)
+		{
+			return $data->result_array();
+		}
+		else
+		{
+			return array();
+		}
+	}
+	
+	function get_status_pegawai()
+	{
+		$data = $this->db->where('fld_tyid',"19")->order_by('fld_tyvalnm',"ASC")->get('tbl_tyval');
+		if($data->num_rows > 0)
+		{
+			return $data->result_array();
+		}
+		else
+		{
+			return array();
+		}
 	}
 	
 	

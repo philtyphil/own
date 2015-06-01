@@ -1,4 +1,4 @@
-$( document ).ready(function() {
+$(document).ready(function() {
 	$('.selectpicker').selectpicker('show');
 
 
@@ -19,13 +19,11 @@ function cari_click()
 		data: data,
 		dataType: "JSON",
 		success: function(e){
-			$("#load_absensi").fadeOut("fast");
-		
-			setTimeout(function(){
-				$("#load_absensi").html(e.table_absensi);
-				$("#load_absensi").fadeIn("slow");
-				$("#loading").fadeOut("slow");
-			},500);
+			$("#load_jml_pegawai").fadeOut("fast");
+			$("#load_jml_pegawai").html(e.table_absensi);
+			$("#load_jml_pegawai").fadeIn("slow");
+			$("#loading").fadeOut("slow");
+			
 			
 			
 		}
@@ -185,4 +183,43 @@ function rekap_click()
 			
 		}
 	});
+}
+
+function rekap_pegawai_click()
+{
+	var lokasi 			= $("#lokasi_rekap_pegawai").val();
+	var golongan		= $("#golongan_rekap_pegawai").val();
+	var status_pegawai	= $("#status_pegawai_detail").val();
+	var tahun			= $("#tahun_rekap").val();
+	var data = {
+		lokasi : lokasi,
+		golongan : golongan,
+		status_pegawai : status_pegawai,
+		tahun:tahun
+	};
+	var url = "{base_url}laporan/rekap";
+	$.ajax({
+		type: "POST",
+		url: url,
+		data: data,
+		dataType: "JSON",
+		success: function(e){
+			$("#load_rekap_pegawai").fadeOut("fast");
+			$("#loading").fadeIn("slow");
+			setTimeout(function(){
+				$("#load_rekap_pegawai").html(e.table_rekap_pegawai);
+				$("#load_rekap_pegawai").fadeIn("slow");
+				$("#loading").fadeOut("slow");
+			},2000);
+			
+			
+		}
+		//error:function()
+		//{
+		//	bootbox.confirm("<span class='text-center'>Gagal menampilkan!!.<br/> Contant the Administrator!</span>", function(result) {
+		//		
+		//	});
+		//}
+	});
+	
 }

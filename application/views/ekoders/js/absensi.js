@@ -125,6 +125,10 @@ function proses_insert()
 		url: url,
 		data: data,
 		dataType: "JSON",
+		error	: function(){
+				bootbox.confirm("Terjadi Kesalahan Pada Pemograman, <br/> Silakan Hubungan Bidang IT", function(result) {
+			});
+		},
 		success: function(e){
 			$("#load_absensi_after_insert").fadeOut("fast");
 			
@@ -201,6 +205,11 @@ function rekap_click()
 		url: url,
 		data: data,
 		dataType: "JSON",
+		error:function(){
+			$("#load_absensi").fadeOut("fast");
+			$("#loading").fadeIn("slow");
+			bootbox.confirm("Error Load Rekap <br/> Silakan Infokan Error ini ke bagian IT!", function(result) {});
+		},
 		success: function(e){
 			$("#load_absensi").fadeOut("fast");
 			$("#loading").fadeIn("slow");

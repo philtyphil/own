@@ -26,9 +26,11 @@ class Laporan extends CI_Controller {
 		{
 			$this->load->model('laporan_model');
 			/** Success Login **/
-			$data['sForm'] 		= "Laporan";
-			$data['title'] 		= "Laporan";
-			$data['lokasi']		= $this->laporan_model->get_lokasi();
+			$data['sForm'] 			= "Laporan";
+			$data['title'] 			= "Laporan";
+			$data['lokasi']			= $this->laporan_model->get_lokasi();
+			$data['golongan']		= $this->laporan_model->get_golongan();
+			$data['status_pegawai']	= $this->laporan_model->get_status_pegawai();
 			render('laporan',$data,"laporan");
 			
 		}
@@ -54,7 +56,7 @@ class Laporan extends CI_Controller {
 				$view['error_lokasi'] = strip_tags(form_error('lokasi'));
 			}
 			if(validation_errors('bulan')!=NULL){
-				$view['error_lokasi'] = strip_tags(form_error('lokasi'));
+				$view['error_tahun'] = strip_tags(form_error('tahun'));
 			}
 			
 		}
@@ -87,7 +89,7 @@ class Laporan extends CI_Controller {
 	public function insert()
 	{
 		$this->load->library('menuroleaccess');
-		$auth_page = $this->menuroleaccess->check_access("adm_kepegawaian");
+		$auth_page = $this->menuroleaccess->check_access("laporan");
 		if($auth_page && $this->input->post())
 		{
 			$this->load->library('form_validation');
@@ -148,7 +150,14 @@ class Laporan extends CI_Controller {
 					$max_date 	= date('t',strtotime($tanggal));
 					$absensi_data 			= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
 					$buff['absensi_data'] 	= $absensi_data;
-					$buff['hari']			= array('Sunday' => "Minggu",'Monday' => "Senin", 'Tuesday'=>"Selasa",'Wednesday' => "Rabu",'Thursday' => "Kamis", 'Friday' => "Jumat",'Saturday' => "Sabtu");
+					$buff['hari']			= array('Sunday' 	=> "Minggu",
+													'Monday' 	=> "Senin", 
+													'Tuesday'	=>"Selasa",
+													'Wednesday' => "Rabu",
+													'Thursday' 	=> "Kamis", 
+													'Friday' 	=> "Jumat",
+													'Saturday' 	=> "Sabtu");
+					
 					$view['table_absensi']  = $this->parser->parse(template().'/jLoadpage/absensi_content.html',$buff);
 				}
 				
@@ -161,9 +170,17 @@ class Laporan extends CI_Controller {
 		
 	}
 	
+	public function json()
+	{
+		$lokasi			= decode($this->uri->segment(3));
+		$golongan 		= decode($this->uri->segment(4));
+		$status_pegawai	= decode($this->uri->segment(5));
+		$tahun			= decode($this->uri->segment(6));
+	}
+	
 	/**
 	 * Validasi input jam
-	 * @param  string $str ex
+	 * @param  string $str ex 08:00
 	 * @return boolean  true/false
 	 */
 	function check_time($str)
@@ -180,15 +197,60 @@ class Laporan extends CI_Controller {
 		}
 	}
 	
+	/**
+	 * Fungsi Menampilkan Data Table (tablenya aja!)
+	 */
 	public function rekap()
 	{
-		$lokasi	= decode($this->input->post('tokenUnit'));
-		$bulan 	= decode($this->input->post('bulan'));
-		$tahun	= decode($this->input->tahun('tahun'));
-		$this->db->model('laporan_model');
-		$get	= $this->laporan_model->get_absensi_rekap($lokasi);
+		$this->load->library('menuroleaccess');
+		$auth_page = $this->menuroleaccess->check_access("laporan");
+		if($auth_page)
+		{
+			// Ubah Array Menjadi String - @philtyphils
+			$golongan = $this->input->post('golongan');
+			if(is_array($this->input->post('golongan')))
+			{
+				$golongan = "";
+				foreach($this->input->post('golongan') as $key => $value)
+				{
+					$golongan .= $golongan ."|";
+				}
+			}
+			
+			// Ubah Array Status Pegawai Menjadi String - @philtyphils
+			$status_pegawai = $this->input->post('status_pegawai');
+			if(is_array($this->input->post('status_pegawai')))
+			{
+				$status_pegawai = "";
+				foreach($this->input->post('status_pegawai') as $key => $value)
+				{
+					$status_pegawai .= $status_pegawai . "|";
+				}
+			}
+			
+			$buff['lokasi']					= encode($this->input->post('lokasi'));
+			$buff['golongan']				= encode($golongan);
+			$buff['status_pegawai']			= encode($status_pegawai);
+			$buff['tahun']					= encode($this->input->post('tahun'));
+			$buff['base_url']				= config_item('base_url');
+			$buff['template']				= template();
+			$data['table_rekap_pegawai']	= $this->parser->parse(template().'/jLoadpage/laporan_content.html',$buff);
+			$data['base_url']				= config_item('base_url');
+			header('content-type:application/json');
+			echo json_encode($data);
+			exit();
+			
+			
+		}
+		else
+		{
+			show_error("Auth Failed To Access This URL","501",$heading="Auth Access Failed");
+		}
 	}
 	
+	/**
+	 * Fungsi untuk cetak file format excel!
+	 */
 	public function print_excel()
 	{
 		$nip 	= $this->uri->segment(3);
