@@ -1,17 +1,22 @@
 <script src="{base_url}assets/{template}/js/plugins/datatables/jquery.dataTables.min.js"></script>
+<!-- <script src="{base_url}assets/{template}/js/plugins/data-tables/jquery.dataTables.js"></script> jQUery 1.9q-->
 	<table id="laporan" class="datatable table table-hover table-striped table-bordered tc-table">
 		<thead>
-			<tr>
-				<th data-class="expand">Golongan</th>
-				<th data-hide="phone,tablet">NIK</th>
-				<th data-hide="phone,tablet">Nama Pegawai</th>
-				<th data-hide="phone,tablet">Jenis Kelamin</th>
-				<th data-hide="phone,tablet">Status Pegawai</th>
-				<th data-hide="phone,tablet">Lokasi</th>
-				<th data-hide="phone,tablet">Lokasi Kerja</th>
+			<tr >
+				<th class="text-center" data-class="expand">Golongan</th>
+				<th class="text-center" data-hide="phone,tablet">NIK</th>
+				<th class="text-center" data-hide="phone,tablet">Nama Pegawai</th>
+                <th class="text-center" data-hide="phone,tablet">Tgl. Lahir</th>
+				<th class="text-center" data-hide="phone,tablet">Jns. Kelamin</th>
+				<th class="text-center" data-hide="phone,tablet">Sts. Peg</th>
+				<th class="text-center" data-hide="phone,tablet">Pend.</th>
+				<th class="text-center" data-hide="phone,tablet">Sts. Kel</th>
+				<th class="text-center" data-hide="phone,tablet">Lokasi</th>
+				<th class="text-center" data-hide="phone,tablet">Masa Kerja</th>
+
 			</tr>
 		</thead>
-		<tbody></tbody>
+		<tbody class="text-center"></tbody>
 	</table>
 
 <script type="text/javascript">
@@ -25,18 +30,20 @@ $(document).ready(function () {
     var tableElement = $('#laporan');
 
     tableElement.dataTable({
-        //"paginationType": 'bootstrap',
+        "paginationType": 'bootstrap',
         "language"      : {
-            'lengthMenu': "_MENU_ products per page",
+            'lengthMenu': "_MENU_ ",
 			//"zeroRecords": "Nothing found - sorry",
 			//"info": "Showing page _PAGE_ of _PAGES_",
             //"infoEmpty": "No records available",
             //"infoFiltered": "(filtered from _MAX_ total records)"
         },
+		"iDisplayLength":10,
         "processing": true,
         "serverSide": true,
-		"ajax"		: '{base_url}laporan/json/{lokasi}/{golongan}/{status_pegawai}/{tahun}',
-		// for more option please see http://datatables.net/examples/index
+		"order": [[ 0, 'asc' ], [ 2, 'asc' ]],
+		"ajax"		: '{base_url}laporan/json/{lokasi}/{golongan}/{status_pegawai}/{masa_kerja}/{pendidikan}/{masa_kerja}',
+		// for more option please email philtyphils@gmail.com;08118779995
 		
         preDrawCallback: function () {
             // Initialize the responsive datatables helper once.

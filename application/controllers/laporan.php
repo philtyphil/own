@@ -31,6 +31,7 @@ class Laporan extends CI_Controller {
 			$data['lokasi']			= $this->laporan_model->get_lokasi();
 			$data['golongan']		= $this->laporan_model->get_golongan();
 			$data['status_pegawai']	= $this->laporan_model->get_status_pegawai();
+			$data['pendidikan']		= $this->laporan_model->get_pendidikan_pegawai();
 			render('laporan',$data,"laporan");
 			
 		}
@@ -77,6 +78,9 @@ class Laporan extends CI_Controller {
 		exit();
 	}
 	
+	/**
+	 * Get Laporan Dari Datatable
+	 */
 	public function get_laporan_datatable()
 	{
 		$lokasi = decode($this->uri->segment(3));
@@ -88,6 +92,7 @@ class Laporan extends CI_Controller {
 	
 	public function insert()
 	{
+		
 		$this->load->library('menuroleaccess');
 		$auth_page = $this->menuroleaccess->check_access("laporan");
 		if($auth_page && $this->input->post())
@@ -112,6 +117,8 @@ class Laporan extends CI_Controller {
 				if(validation_errors('jam_pulang')!=NULL){
 					$view['error_jam_pulang'] = strip_tags(form_error('jam_pulang'));
 				}
+				
+				
 				
 			}
 			else
@@ -175,7 +182,25 @@ class Laporan extends CI_Controller {
 		$lokasi			= decode($this->uri->segment(3));
 		$golongan 		= decode($this->uri->segment(4));
 		$status_pegawai	= decode($this->uri->segment(5));
-		$tahun			= decode($this->uri->segment(6));
+		$pendidikan		= decode($this->uri->segment(6));
+		$masa_kerja		= decode($this->uri->segment(6));
+		
+		// Prepare Data to Load Datatable
+		$this->load->model('laporan_model');
+		$data = $this->laporan_model->json_dt($_GET,$lokasi,$golongan,$status_pegawai,$pendidikan,$masa_kerja);
+		
+		if(is_array($data))
+		{
+		
+			header('content-type:application/json');
+			echo json_encode($data);
+			exit();
+		}
+		else
+		{
+			show_error("Data Return Isn't Array Value","501",$heading="Eror Load Datatable - @philtyphils");
+			return false;
+		}
 	}
 	
 	/**
@@ -192,10 +217,11 @@ class Laporan extends CI_Controller {
 		}
 		else
 		{
-			$this->form_validation->set_message('check_time', 'Format Jam Yang Anda Masukan Tidak Sesuai');
+			$this->form_validation->set_message('check_time', 'Format Jam Yang Anda Masukan Tidak Sesuai.');
 			return false;
 		}
 	}
+
 	
 	/**
 	 * Fungsi Menampilkan Data Table (tablenya aja!)
@@ -204,42 +230,91 @@ class Laporan extends CI_Controller {
 	{
 		$this->load->library('menuroleaccess');
 		$auth_page = $this->menuroleaccess->check_access("laporan");
-		if($auth_page)
+		
+		if($auth_page && $this->input->post())
 		{
-			// Ubah Array Menjadi String - @philtyphils
-			$golongan = $this->input->post('golongan');
-			if(is_array($this->input->post('golongan')))
+		
+			$this->load->library('form_validation');
+			$this->form_validation->set_rules('lokasi', 'Lokasi', 'trim|required|max_length[3]|numeric');
+			$this->form_validation->set_rules('golongan[]', 'Golongan', 'trim|required');
+			$this->form_validation->set_rules('status_pegawai[]', 'Status Pegawai', 'trim|required');
+			$this->form_validation->set_rules('awal', 'Masa Kerja (Awal)', 'trim|max_length[2]|numeric');
+			$this->form_validation->set_rules('akhir', 'Masa Kerja (Akhir)', 'trim|max_length[2]|numeric');
+			$this->form_validation->set_rules('pendidikan[]', 'Pendidikan', 'trim|required');
+		
+			if($this->form_validation->run() == FALSE)
 			{
-				$golongan = "";
-				foreach($this->input->post('golongan') as $key => $value)
-				{
-					$golongan .= $golongan ."|";
+				$view = "";
+				if(validation_errors('lokasi')!=NULL){
+					$view['error_lokasi'] = strip_tags(form_error('lokasi'));
+				}
+				if(validation_errors('golongan')!=NULL){
+					$view['error_golongan'] = strip_tags(form_error('tanggal'));
+				}
+				if(validation_errors('status_pegawai')!=NULL){
+					$view['error_status_pegawai'] = strip_tags(form_error('status_pegawai'));
+				}
+				if(validation_errors('awal')!=NULL){
+					$view['error_awal'] = strip_tags(form_error('awal'));
+				}
+				if(validation_errors('akhir')!=NULL){
+					$view['error_akhir'] = strip_tags(form_error('akhir'));
+				}
+				if(validation_errors('pendidikan')!=NULL){
+					$view['error_pendidikan'] = strip_tags(form_error('pendidikan'));
 				}
 			}
-			
-			// Ubah Array Status Pegawai Menjadi String - @philtyphils
-			$status_pegawai = $this->input->post('status_pegawai');
-			if(is_array($this->input->post('status_pegawai')))
+			else
 			{
-				$status_pegawai = "";
-				foreach($this->input->post('status_pegawai') as $key => $value)
+				// Ubah Array Golongan Menjadi String - @philtyphils
+				$golongan = $this->input->post('golongan');
+				if(is_array($this->input->post('golongan')))
 				{
-					$status_pegawai .= $status_pegawai . "|";
+					$golongan = "";
+					foreach($this->input->post('golongan') as $key => $value)
+					{
+						$golongan .= $value ."|";
+					}
 				}
-			}
+		
+				// Ubah Array Status Pegawai Menjadi String - @philtyphils
+				$status_pegawai = $this->input->post('status_pegawai');
+				if(is_array($this->input->post('status_pegawai')))
+				{
+					$status_pegawai = "";
+					foreach($this->input->post('status_pegawai') as $key => $value)
+					{
+						$status_pegawai .= $value . "|";
+					}
+				}
+
+				// Ubah Array Pendidikan Pegawai Menjadi String - @philtyphils
+				$pendidikan = $this->input->post('pendidikan');
+				if(is_array($this->input->post('pendidikan')))
+				{
+					$pendidikan = "";
+					foreach($this->input->post('pendidikan') as $key => $value)
+					{
+						$pendidikan .= $value ."|";
+					}
+				}
+		
+				$masa_kerja = ($this->input->post('akhir') == "" && $this->input->post('awal') != "") ? $this->input->post('awal')."-".$this->input->post('awal') : $this->input->post('awal')."-".$this->input->post('akhir');
 			
-			$buff['lokasi']					= encode($this->input->post('lokasi'));
-			$buff['golongan']				= encode($golongan);
-			$buff['status_pegawai']			= encode($status_pegawai);
-			$buff['tahun']					= encode($this->input->post('tahun'));
-			$buff['base_url']				= config_item('base_url');
-			$buff['template']				= template();
-			$data['table_rekap_pegawai']	= $this->parser->parse(template().'/jLoadpage/laporan_content.html',$buff);
-			$data['base_url']				= config_item('base_url');
+				$buff['lokasi']					= encode($this->input->post('lokasi'));
+				$buff['golongan']				= encode($golongan);
+				$buff['status_pegawai']			= encode($status_pegawai);
+				$buff['pendidikan']				= encode($pendidikan);
+				$buff['masa_kerja']				= encode($masa_kerja);
+				$buff['base_url']				= config_item('base_url');
+				$buff['template']				= template();
+				$view['table_rekap_pegawai']	= $this->parser->parse(template().'/jLoadpage/laporan_content.html',$buff);
+				$view['success']				= "UYEAY";
+				
+			}
 			header('content-type:application/json');
-			echo json_encode($data);
+			echo json_encode($view);
 			exit();
-			
 			
 		}
 		else
@@ -389,5 +464,6 @@ class Laporan extends CI_Controller {
 		exit();
 	}
 }
-/* End of file home.php */
-/* Location: ./application/controllers/home.php */
+/* End of file laporan.php */
+/* Location: ./application/controllers/laporan.php */
+/* Contact : philtyphils@gmail.com;08118779995 */

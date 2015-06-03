@@ -32,9 +32,12 @@
 									<div class="col-sm-3">
 										<?php $selected = "";?>
 									<select class="form-control selectpicker" id="lokasi" data-live-search="true" data-style="btn-info">
-										{lokasi}
-										<option value="{lokcd}">{loknm} - {loktp}</option>
-										{/lokasi}
+										<?php foreach($lokasi as $key => $value):?>
+											<?php $selected = ($value['lokcd'] == $this->session->userdata('lokcd')) ? "selected" : "";?>
+											<option value="<?php echo $value['lokcd'];?>" <?php echo $selected;?> >
+												<?php echo $value['loknm'] ." - " . $value['loktp'];?>
+											</option>
+										<?php endforeach;?>
 									</select>
 					
 									</div>
@@ -93,9 +96,12 @@
 									<label class="col-sm-2 control-label">Lokasi</label>
 									<div class="col-sm-5">
 										<select class="form-control selectpicker" id="lokasi_rekap_pegawai" data-live-search="true" data-style="btn-info" data-selected-text-format="count>3">
-											{lokasi}
-											<option value="{lokcd}">{loknm} - {loktp}</option>
-											{/lokasi}
+											<?php foreach($lokasi as $key => $value):?>
+											<?php $selected = ($value['lokcd'] == $this->session->userdata('lokcd')) ? "selected" : "";?>
+												<option value="<?php echo $value['lokcd'];?>" <?php echo $selected;?> >
+													<?php echo $value['loknm'] ." - " . $value['loktp'];?>
+												</option>
+											<?php endforeach;?>
 										</select>
 									</div>
 								</div>
@@ -113,11 +119,25 @@
 								</div>
 								
 								<div class="form-group">
+									<label class="col-sm-2 control-label">Pendidikan</label>
+									<div class="col-sm-5">
+										
+										<select multiple="multiple" class="form-control selectpicker" id="pendidikan_detail" data-live-search="true"  data-selected-text-format="count>2" >
+											<option value="ALL" selected>Semua Pendidikan</option>
+											{pendidikan}
+											<option value="{fld_tyvalcd}">{fld_tyvalnm}</option>
+											{/pendidikan}
+											
+										</select>
+									</div>
+								</div>
+
+								<div class="form-group">
 									<label class="col-sm-2 control-label">Status Pegawai</label>
 									<div class="col-sm-5">
 										
 										<select multiple="multiple" class="form-control selectpicker" id="status_pegawai_detail" data-live-search="true"  data-selected-text-format="count>2" >
-											<option value="ALL">Semua Status</option>
+											<option value="ALL" selected>Semua Status</option>
 											{status_pegawai}
 											<option value="{fld_tyvalid}">{fld_tyvalnm}</option>
 											{/status_pegawai}
@@ -127,19 +147,18 @@
 								</div>
 								
 								<div class="form-group">
-									<label class="col-sm-2 control-label">Tahun</label>
-									<div class="col-sm-5">
-										<?php $selected = "";?>
-										<select class="form-control selectpicker" id="tahun_rekap">
-										<?php for($i=date("Y");$i>=2008;$i--): ?>
-										<?php if($i == date("Y")):?>
-										<?php $selected = "selected";?>
-										<?php endif;?>
-										<option value='<?php echo $i;?>' <?php echo $selected;?>><?php echo $i;?></option>
-										<?php $selected = "";?>
-										<?php endfor; ?>
-										</select>
+									<label class="col-sm-2 control-label">Masa Kerja</label>
+
+									<div class="col-sm-2">
+										<input type="text" maxlength="2" class="form-control maxL-2 text-center" placeholder="Dari" id="awal" >
 									</div>
+									<div class="col-sm-1">
+										<input type="text" class="form-control maxL-2 text-center" value="s/d" disabled>
+									</div>
+									<div class="col-sm-2">
+										<input type="text" maxlength="2" class="form-control maxL-2 text-center" placeholder="Sampai" id="akhir">
+									</div>
+									
 									
 								</div>
 							
@@ -163,7 +182,8 @@
 									</div>
 								</div>
 							</form>
-							<div id="loading" style="display:none;margin-left:49.5%;">
+							<br/><br/>
+							<div id="loading_rekap_pegawai" style="display:none;margin-left:49.5%;">
 								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								<img src="{base_url}assets/img/loading.gif" alt="loading"/><br/>
 								<span class="text-center">Memproses Data . . .</span>

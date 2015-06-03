@@ -1,5 +1,15 @@
 $(document).ready(function() {
 	$('.selectpicker').selectpicker('show');
+	$('input.maxL-2').maxlength({
+				alwaysShow: false,
+				warningClass: "label ",
+				limitReachedClass: "label label-danger",
+				separator: ' of ',
+				preText: 'You have ',
+				postText: ' chars remaining.',
+				validate: true,
+				threshold: 10
+			});
 
 
 });
@@ -23,9 +33,6 @@ function cari_click()
 			$("#load_jml_pegawai").html(e.table_absensi);
 			$("#load_jml_pegawai").fadeIn("slow");
 			$("#loading").fadeOut("slow");
-			
-			
-			
 		}
 	});
 }
@@ -187,15 +194,20 @@ function rekap_click()
 
 function rekap_pegawai_click()
 {
+	$("#loading_rekap_pegawai").fadeIn("slow");
 	var lokasi 			= $("#lokasi_rekap_pegawai").val();
 	var golongan		= $("#golongan_rekap_pegawai").val();
 	var status_pegawai	= $("#status_pegawai_detail").val();
-	var tahun			= $("#tahun_rekap").val();
+	var awal_masa_ker	= $("#awal").val();
+	var akhir_masa_ker	= $("#akhir").val();
+	var pendidikan		= $("#pendidikan_detail").val();
 	var data = {
 		lokasi : lokasi,
 		golongan : golongan,
 		status_pegawai : status_pegawai,
-		tahun:tahun
+		awal:awal_masa_ker,
+		akhir:akhir_masa_ker,
+		pendidikan:pendidikan
 	};
 	var url = "{base_url}laporan/rekap";
 	$.ajax({
@@ -204,22 +216,76 @@ function rekap_pegawai_click()
 		data: data,
 		dataType: "JSON",
 		success: function(e){
-			$("#load_rekap_pegawai").fadeOut("fast");
-			$("#loading").fadeIn("slow");
-			setTimeout(function(){
-				$("#load_rekap_pegawai").html(e.table_rekap_pegawai);
-				$("#load_rekap_pegawai").fadeIn("slow");
-				$("#loading").fadeOut("slow");
-			},2000);
+			if(e.error_lokasi != "" && typeof(e.error_lokasi) != "undefined")
+			{
+				$("#loading_insert").fadeOut("slow");
+				bootbox.confirm(e.error_lokasi, function(result) {
+					$("#loading_rekap_pegawai").fadeOut("slow");
+				});
+			}
+			else if(e.error_golongan != "" && typeof(e.error_golongan) != "undefined")
+			{
+				$("#loading_insert").fadeOut("slow");
+				bootbox.confirm(e.error_golongan, function(result) {
+					$("#loading_rekap_pegawai").fadeOut("slow");
+				});
+			}
+			else if(e.error_status_pegawai != "" && typeof(e.error_status_pegawai) != "undefined")
+			{
+				$("#loading_insert").fadeOut("slow");
+				bootbox.confirm(e.error_status_pegawai, function(result) {
+					$("#loading_rekap_pegawai").fadeOut("slow");
+				});
+			}
+			else if(e.error_akhir != "" && typeof(e.error_akhir) != "undefined")
+			{
+				$("#loading_insert").fadeOut("slow");
+				bootbox.confirm(e.error_akhir, function(result) {
+					$("#loading_rekap_pegawai").fadeOut("slow");
+				});
+			}
+			else if(e.error_awal != "" && typeof(e.error_awal) != "undefined")
+			{
+				$("#loading_insert").fadeOut("slow");
+				bootbox.confirm(e.error_awal, function(result) {
+					$("#loading_rekap_pegawai").fadeOut("slow");
+				});
+			}
+			else if(e.error_pendidikan != "" && typeof(e.error_pendidikan) != "undefined")
+			{
+				$("#loading_insert").fadeOut("slow");
+				bootbox.confirm(e.error_pendidikan, function(result) {
+					$("#loading_rekap_pegawai").fadeOut("slow");
+				});
+			}
+			else
+			{
+				$("#load_rekap_pegawai").fadeOut("fast");
+				setTimeout(function(){
+					$("#load_rekap_pegawai").html(e.table_rekap_pegawai);
+					$("#load_rekap_pegawai").fadeIn("slow");
+					$("#loading_rekap_pegawai").fadeOut("slow");
+				},800);
+			}
 			
 			
+		},
+		error:function()
+		{
+			bootbox.confirm("<span class='text-center'>Gagal menampilkan!!.<br/> Silakan Informasi Ke bagian terkait!.</span>", function(result) {
+				$("#loading_rekap_pegawai").fadeOut("fast");
+			});
 		}
-		//error:function()
-		//{
-		//	bootbox.confirm("<span class='text-center'>Gagal menampilkan!!.<br/> Contant the Administrator!</span>", function(result) {
-		//		
-		//	});
-		//}
 	});
 	
 }
+
+function penyamaan(val)
+{
+	if($("#akhir").val() == "")
+	{
+		$("#akhir").val(val);
+	}
+}
+
+
