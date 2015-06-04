@@ -33,7 +33,6 @@ class Laporan extends CI_Controller {
 			$data['status_pegawai']	= $this->laporan_model->get_status_pegawai();
 			$data['pendidikan']		= $this->laporan_model->get_pendidikan_pegawai();
 			render('laporan',$data,"laporan");
-			
 		}
 		else
 		{
@@ -183,7 +182,7 @@ class Laporan extends CI_Controller {
 		$golongan 		= decode($this->uri->segment(4));
 		$status_pegawai	= decode($this->uri->segment(5));
 		$pendidikan		= decode($this->uri->segment(6));
-		$masa_kerja		= decode($this->uri->segment(6));
+		$masa_kerja		= decode($this->uri->segment(7));
 		
 		// Prepare Data to Load Datatable
 		$this->load->model('laporan_model');
@@ -328,46 +327,154 @@ class Laporan extends CI_Controller {
 	 */
 	public function print_excel()
 	{
-		$nip 	= $this->uri->segment(3);
-		$bulan 	= $this->uri->segment(4);
-		$tahun 	= $this->uri->segment(5);
+		$lokasi 		= $this->uri->segment(3);
+		$golongan 		= $this->uri->segment(4);
+		$status_pegawai = $this->uri->segment(5);
+		$awal_masa_ker 	= $this->uri->segment(6);
+		$akhir_masa_ker = $this->uri->segment(7);
+		$pendidikan 	= $this->uri->segment(8);
 		$this->load->library('menuroleaccess');
-		$auth_page = $this->menuroleaccess->check_access("adm_kepegawaian");
+		$auth_page = $this->menuroleaccess->check_access("laporan");
 		if($auth_page) 
 		{
-			$this->load->model('absensi_model');
-			$tanggal 		= $tahun."-".$bulan."-01";
-			$max_date 		= date('t',strtotime($tanggal));
-			$data			= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
+			$masa_kerja = ($this->input->post('akhir') == "null" && $this->input->post('awal') != "null") ? $this->input->post('awal')."-".$this->input->post('awal') : $this->input->post('awal')."-".$this->input->post('akhir');
+			
+			$this->load->model('laporan_model');
+			$data	= $this->laporan_model->get_data_cetak($lokasi,$golongan,$status_pegawai,$awal_masa_ker,$akhir_masa_ker,$pendidikan);
 			
 			$this->load->library('Excel');  
-		
 			// Create new PHPExcel object  
 			$objPHPExcel = new PHPExcel();  
 			/* Set Width column */
-			$objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(25);
-			$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(25);
-			$objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(25);
-			$objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
-			$objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(20);
-			$objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(20);
-			$objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(20);
-			$objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(20);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(10);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(12);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('C')->setWidth(26);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('D')->setWidth(13);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('E')->setWidth(14);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('F')->setWidth(22);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(6);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(7);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(19);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('J')->setWidth(17);
+			$objPHPExcel->getActiveSheet()->getRowDimension('7')->setRowHeight(35);
 			$objPHPExcel->getActiveSheet()->getStyle('A2')->getFont()->setBold(true);
-			$objPHPExcel->getActiveSheet()->getStyle('A3')->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A2',"DATA PEGAWAI BGR INDONESIA");
 			
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A2',"LAPORAN ABSENSI PEGAWAI");
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A3',$this->session->userdata('fld_empnm'));
+			 
+			
+			$rowdefault = 3;
+			/* :set GOLONGAN HEADER */
+			if(isset($golongan) && $golongan != '' && $golongan != "ALL-")
+			{
+				$defGol = $this->laporan_model->get_golongan($golongan);
+				$golongan = "";
+				foreach($defGol as $key => $value)
+				{
+					$golongan = $golongan.", ".$value['fld_tyvalnm'];
+				}
+				unset($defGol);
+				$golongan = substr($golongan,1);
+				
+				// Bold It!
+				$objPHPExcel->getActiveSheet()->getStyle('A'.$rowdefault)->getFont()->setBold(true);
+				// Write It To Excel
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A'.$rowdefault++,'GOLONGAN: '.$golongan);
+			}
+			
+			/* :set Status Pegawai HEADER */
+			if(isset($status_pegawai) && $status_pegawai != '' && $status_pegawai != "ALL-")
+			{
+				$defGol = $this->laporan_model->get_status_pegawai($status_pegawai);
+				
+				$status_pegawai = "";
+				foreach($defGol as $key => $value)
+				{
+					$status_pegawai = $status_pegawai.", ".$value['fld_tyvalnm'];
+				}
+				unset($defGol);
+				$status_pegawai = substr($status_pegawai,1);
+				
+				// Bold It!
+				$objPHPExcel->getActiveSheet()->getStyle('A'.$rowdefault)->getFont()->setBold(true);
+				//Write It To Excel
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A'.$rowdefault++,'Status Pegawai: '.$status_pegawai);
+			}
+			
+			/* :set Pendidikani HEADER */
+			if(isset($pendidikan) && $pendidikan != '' && $pendidikan != "-")
+			{
+				$defGol = $this->laporan_model->special_pendidikan_pegawai($pendidikan);
+				$pendidikan = "";
+				foreach($defGol as $key => $value)
+				{
+					$pendidikan = $pendidikan.", ".$value['fld_tyvalnm'];
+				}
+				unset($defGol);
+				$pendidikan = substr($pendidikan,1);
+				
+				// Bold It!
+				$objPHPExcel->getActiveSheet()->getStyle('A'.$rowdefault)->getFont()->setBold(true);
+				//Write It To Excel
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A'.$rowdefault++,'Pendidikan: '.$pendidikan);
+			}
+			
+			$col = "A";$rowdefault++;
+//			$styleCenter = array(
+//					'alignment' => array(
+//						'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+//						'vertical' => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+//					)
+//				);
+
+			
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue($col.$rowdefault,"Golongan");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"NIK");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"Nama Pegawai");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"Tgl Lahir");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"Jns. Kelamin");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"Sts. Pegawai");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"Pend.");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"Sts. Kel");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"Lokasi");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"Masa Kerja");
+			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
+			$col = "A";$rowdefault++;
+				//* Freeze **//
+			$objPHPExcel->getActiveSheet()->freezePane($col.$rowdefault);
+			//$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault.":J".$rowdefault)->applyFromArray($styleCenter);
+			foreach($data as $key => $value)
+			{
+				$time = explode(".",$value['masa_kerja']);
+				if(count($time) > 0)
+				{
+					$tahun = $time[0] . " Tahun ";
+					$bulan = substr($time[1],1,1) . " Bulan";
+				}
+				$masa_kerja =  $tahun . $bulan;
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($col .$rowdefault, "GOL. ".$value['gol']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$value['fld_empnik']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$value['fld_empnm']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$value['fld_empbod']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$value['sex']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$value['stspeg']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$value['pddk']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$value['stskel']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$value['loknm']);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col . $rowdefault,$masa_kerja);
+				$col="A";$rowdefault++;unset($masa_kerja);
+				
+			}
+			
 		
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A7',"TANGGAL");
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B7',"JAM DATANG");
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('C7',"JAM PULANG");
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('D7',"TL");
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('E7',"PSW");
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('F7',"CUTI");
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('G7',"TMB");
-			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('H7',"KET");
-			
 			/** Set Default style **/
 			$styleArray = array(
 				'borders' => array(
@@ -380,34 +487,20 @@ class Laporan extends CI_Controller {
 			// Set document properties  
 			$objPHPExcel->getProperties()->setCreator("Sulistyo Nur Anggoro - @philtyphils")  
 				->setLastModifiedBy("philtyphils@gmail.com")  
-				->setTitle("Report Absensi Pegawai ".$this->session->userdata('fld_empnm'))  
+				->setTitle("DATA PEGAWAI BGR")  
 				->setSubject("Office 2007 XLSX Test Document")  
 				->setDescription("Absensi Pegawai")  
 				->setKeywords("BGR - Report Absnesi")  
 				->setCategory("Report");  
-				
-			$clm = "8";$row="A";
-			foreach($data as $key => $value)
-			{
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($row.$clm,$value['date']);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['jam_datang']);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['jam_pulang']);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['TL']);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['PSW']);
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"");
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"");
-				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"");
-				$clm++;$row="A";
-				
-			}
+			
 			
 			// Rename worksheet (worksheet, not filename)  
-			$objPHPExcel->getActiveSheet()->setTitle('Absensi_report_'.$bulan);  
+			$objPHPExcel->getActiveSheet()->setTitle('DATA PEGAWAI');  
 			
 			// Set active sheet index to the first sheet, so Excel opens this as the first sheet  
 			$objPHPExcel->setActiveSheetIndex(0); ob_end_clean();   
 			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment;filename="Absensi_'.$this->session->userdata('fld_empnm')."_".$bulan."_".$tahun.".xlsx");  
+			header('Content-Disposition: attachment;filename="DATA PEGAWAI BGT.xlsx"');  
 			header('Cache-Control: max-age=0');  
 			
 			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');  

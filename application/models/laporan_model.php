@@ -65,7 +65,6 @@ class Laporan_model extends CI_Model{
 		}
 		
 		
-		
 		$this->db->select($columns);
 		$output = $this->db->get('views_data_pegawai');
 		foreach($output->result_array() as $key=> $value)
@@ -187,13 +186,14 @@ class Laporan_model extends CI_Model{
 		
 			$exp = explode("|",$status_pegawai);
 
-			for($i=0;$i<count($exp) - 1;$i++)
+			for($i=0;$i<count($exp) -1;$i++)
 			{
 				
 				$where .= "id_status_peg = " .$exp[$i].  " OR ";
 			}
 			$where = substr_replace( $where, "", -4 );
 			$where .= " ) ";
+			
 		}
 		
 		// Including Condition Lokasi Pegawai - @philtyphils
@@ -202,27 +202,26 @@ class Laporan_model extends CI_Model{
 			if($where != " WHERE (")
 			{
 				$where .= " AND (";
-				$where .= "id_lokasi = ".$lokasi . " AND ";
+				$where .= "id_lokasi = ".$lokasi . ") ";
 			}
 			else
 			{
-				$where .= "id_lokasi = ".$lokasi . ") AND ";
+				$where .= " id_lokasi = ".$lokasi . ") ";
 			}
 
 			
-			$where = substr_replace( $where, "", -4 );
 		}
 
 		// Including Condition Pendidikan Pegawai - @philtyphils
-		if(isset($pendidikan) && $pendidikan != "" && strpos($status_pegawai,"ALL") === false)
+		if(isset($pendidikan) && $pendidikan != "" && strpos($pendidikan,"ALL") === false)
 		{
 			if($where != " WHERE (")
 			{
 				$where .= " AND (";
 			}
-		
+			
 			$exp = explode("|",$pendidikan);
-
+		
 			for($i=0;$i<count($exp) - 1;$i++)
 			{
 				
@@ -230,10 +229,11 @@ class Laporan_model extends CI_Model{
 			}
 			$where = substr_replace( $where, "", -4 );
 			$where .= " ) ";
+			
 		}
 
 		// Including Condition Masa Kerja Pegawai - @Philtyphils
-		if(isset($masa_kerja))
+		if(isset($masa_kerja) && trim($masa_kerja) != "-")
 		{
 			$tahun = explode("-",$masa_kerja);
 			
@@ -247,7 +247,6 @@ class Laporan_model extends CI_Model{
 				$where .= " ) ";
 			}
  		}
-
  		//Execution Query
 		unset($exp);
 		$query = "SELECT ".str_replace(" , ", " ", implode(", ", $columns))." FROM ".$sTable." 
@@ -288,7 +287,7 @@ class Laporan_model extends CI_Model{
 			$set[] 	= $row;
 			
 		}
-	
+		unset($masa_kerja);
 		$iTotal = $execution->num_rows();
       
 		$sQueryTotal = $query = "SELECT ".str_replace(" , ", " ", implode(", ", $columns))." FROM ".$sTable."  $where";
@@ -314,7 +313,8 @@ class Laporan_model extends CI_Model{
 	{
 		$the_Query = "SELECT 
 						A.fld_tyvalnm AS golongan,
-						(SELECT COUNT(*) FROM view_data_pegawai WHERE stspeg = 'Pensiun' AND id_golongan = A.fld_tyvalid AND id_lokasi = '$lokasi') as pensiun,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE FLOOR(masa_kerja) = 55 AND id_status_peg != 185 AND id_golongan = A.fld_tyvalid AND id_lokasi = '$lokasi') as pegawai_mpp,
+						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_status_peg = 185 AND id_golongan = A.fld_tyvalid AND id_lokasi = '$lokasi') as pensiun,
 						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_lokasi = '$lokasi') AS jml_golongan,
 						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_status_keluarga = '94' AND id_lokasi = '$lokasi') AS TK,
 						(SELECT COUNT(*) FROM view_data_pegawai WHERE id_golongan = A.fld_tyvalid AND id_status_keluarga = '95' AND id_lokasi = '$lokasi' ) AS K0,
@@ -343,9 +343,135 @@ class Laporan_model extends CI_Model{
 		
 	}
 	
-	
-	function get_golongan()
+	/**
+	 * Get Data Untum Menampilkan Excel (Data Filter Di dapat dari form DATA PEGAWAI)
+	 * @param int $lokasi         Lokasi Pegawai Ex: 201,202,203
+	 * @param array $status_pegawai Status Pegawai (bisa Lebih dari Satu)
+	 * @param numeric $awal_masa_ker  Filter Awal Masa Kerja
+	 * @param numeric $akhir_masa_ker Filter Akhir Masa Kerja
+	 * @param array $pendidikan     Pendidikan (bisa Lebih Dari Satu)
+	 */
+	function get_data_cetak($lokasi,$golongan,$status_pegawai,$awal_masa_ker,$akhir_masa_ker,$pendidikan)
 	{
+		$where = " WHERE (";
+		// Including Condition Golongan - @philtyphils
+		if(isset($golongan) && $golongan != "" && strpos($golongan,"ALL") === false)
+		{
+			if($where != " WHERE (")
+			{
+				$where .= " AND (";
+			}
+			
+			$exp = explode("-",$golongan);
+			
+			for($i=0;$i<count($exp) - 1;$i++)
+			{
+				$gol	= explode("-",$exp[$i]);
+				$where .= " id_golongan = ".$gol[0] . " OR ";
+			}
+			$where = substr_replace( $where, "", -4 );
+			$where .= " ) ";
+		}
+		
+		// Including Condition Status Pegawai - @philtyphils
+		if(isset($status_pegawai) && $status_pegawai != "" && strpos($status_pegawai,"ALL") === false)
+		{
+			if($where != " WHERE (")
+			{
+				$where .= " AND (";
+			}
+		
+			$exp = explode("-",$status_pegawai);
+
+			for($i=0;$i<count($exp) -1;$i++)
+			{
+				
+				$where .= "id_status_peg = " .$exp[$i].  " OR ";
+			}
+			$where = substr_replace( $where, "", -4 );
+			$where .= " ) ";
+			
+		}
+		
+		// Including Condition Lokasi Pegawai - @philtyphils
+		if(isset($lokasi) && $lokasi != "")
+		{
+			if($where != " WHERE (")
+			{
+				$where .= " AND (";
+				$where .= "id_lokasi = ".$lokasi . ") ";
+			}
+			else
+			{
+				$where .= " id_lokasi = ".$lokasi . ") ";
+			}
+
+			
+		}
+
+		// Including Condition Pendidikan Pegawai - @philtyphils
+		if(isset($pendidikan) && $pendidikan != "" && strpos($pendidikan,"ALL") === false)
+		{
+			if($where != " WHERE (")
+			{
+				$where .= " AND (";
+			}
+			
+			$exp = explode("-",$pendidikan);
+		
+			for($i=0;$i<count($exp) - 1;$i++)
+			{
+				
+				$where .= "id_pendidikan = " .$exp[$i].  " OR ";
+			}
+			$where = substr_replace( $where, "", -4 );
+			$where .= " ) ";
+			
+		}
+
+		// Including Condition Masa Kerja Pegawai - @Philtyphils
+		if(isset($masa_kerja) && trim($masa_kerja) != "-")
+		{
+			$tahun = explode("-",$masa_kerja);
+			
+			if((isset($tahun[0]) && $tahun[0] != "") && (isset($tahun[1]) && $tahun[1] != ""))
+			{
+				if($where != " WHERE (")
+				{
+					$where .= " AND (";
+				}
+				$where .= " FLOOR(masa_kerja) >= ".$tahun[0]." AND FLOOR(masa_kerja) <= ".$tahun[1];
+				$where .= " ) ";
+			}
+ 		}
+		$columns = 'id_golongan,fld_empnik,fld_empnm,fld_empbod,sex,id_status_peg,id_pendidikan,id_status_keluarga,loknm,masa_kerja,gol,stskel,stspeg,pddk';
+		$order = " ORDER BY id_golongan ASC, fld_empnm ASC ";
+		$query = "SELECT * FROM view_data_pegawai ".$where.$order;
+		$data = $this->db->query($query);
+		
+		if($data->num_rows() > 0)
+		{
+			return $data->result_array();
+		}
+		else
+		{
+			return array();
+		}
+	}
+	
+	
+	function get_golongan($where = "")
+	{
+		// Add Kondisi Untuk Where Print Excel - @Philtyphils
+		if($where != "")
+		{
+			$exp = explode("-",$where);
+			for($i = 0;$i<count($exp)-1;$i++)
+			{
+				$this->db->or_where('fld_tyvalid',$exp[$i]);
+			}
+		}
+		
 		$data = $this->db->select('fld_tyvalid,fld_tyvalnm')->where('fld_tyid',"24")->order_by('fld_tyvalid',"ASC")->get('tbl_tyval');
 		
 		if($data->num_rows > 0)
@@ -358,9 +484,19 @@ class Laporan_model extends CI_Model{
 		}
 	}
 	
-	function get_status_pegawai()
+	function get_status_pegawai($where = "")
 	{
-		$data = $this->db->where('fld_tyid',"19")->order_by('fld_tyvalnm',"ASC")->get('tbl_tyval');
+		// Add Kondisi Untuk Where Print Excel - @Philtyphils
+		if($where != "")
+		{
+			$exp = explode("-",$where);
+			for($i = 0;$i<count($exp)-1;$i++)
+			{
+				$this->db->or_where('fld_tyvalid',$exp[$i]);
+			}
+		}
+		
+		$data = $this->db->where('fld_tyid',"19")->order_by('fld_tyvalid',"ASC")->get('tbl_tyval');
 		if($data->num_rows > 0)
 		{
 			return $data->result_array();
@@ -373,7 +509,7 @@ class Laporan_model extends CI_Model{
 
 	function get_pendidikan_pegawai()
 	{
-		$data = $this->db->where('fld_tyid',"13")->order_by('fld_tyvalcd')->get('tbl_tyval');
+		$data  = 	$this->db->where('fld_tyid',"13")->order_by('fld_tyvalcd',"ASC")->get('tbl_tyval');
 		
 		if($data->num_rows > 0)
 		{
@@ -382,6 +518,37 @@ class Laporan_model extends CI_Model{
 		else
 		{
 			return array();
+		}
+	}
+	
+	function special_pendidikan_pegawai($where)
+	{
+		if($where != "ALL-" && isset($where))
+		{
+			$exp = explode("-",$where);
+			$where = "WHERE fld_tyid = 13 AND (";
+			for($i = 0;$i<count($exp)-1;$i++)
+			{
+				$where .= "fld_tyvalcd = ".$exp[$i]." OR ";
+			}
+		
+			$where = substr_replace( $where, "", -4 );
+			$where .= ")";
+		}
+		else
+		{
+			$where = " WHERE fld_tyid = 13 ";
+		}
+		$query = "SELECT fld_tyvalnm FROM tbl_tyval ".$where;
+		unset($where);
+		$data  = $this->db->query($query);
+		if($data->num_rows() > 0)
+		{
+			return $data->result_array();
+		}
+		else
+		{
+			return false;
 		}
 	}
 	

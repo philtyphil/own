@@ -189,8 +189,8 @@ class Adm_kepegawaian extends CI_Controller {
 	{
 		$lokasi	= decode($this->input->post('tokenUnit'));
 		$bulan 	= decode($this->input->post('bulan'));
-		$tahun	= decode($this->input->tahun('tahun'));
-		$this->db->model('absensi_model');
+		$tahun	= decode($this->input->post('tahun'));
+		$this->load->model('absensi_model');
 		$get	= $this->absensi_model->get_absensi_rekap($lokasi);
 	}
 	

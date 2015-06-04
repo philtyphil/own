@@ -45,14 +45,43 @@ function cancel()
 
 function print_excel()
 {
-	var tahun = $("#tahun").val();
-	var bulan = $("#bulan").val();
-	var nip = $("#nip").val();
-	$("#loading").fadeIn("slow");
+	$("#loading_rekap_pegawai").fadeIn("slow");
+	var lokasi 			= $("#lokasi_rekap_pegawai").val();
+	var golongan		= $("#golongan_rekap_pegawai").val();
+	var status_pegawai	= $("#status_pegawai_detail").val();
+	var awal_masa_ker	= ($("#awal").val() != "") ? $("#awal").val() : "null";
+	var akhir_masa_ker	= ($("#akhir").val() != "") ? $("#akhir").val() : "null";
+	var pendidikan		= $("#pendidikan_detail").val();
+	
+	var gol = "";
+	for(i=0;i<golongan.length;i++)
+	{
+		spliting = golongan[i].split("-");
+		gol 	= gol + spliting[0] + "-";
+	}
+	golongan = gol;//back to default define;
+	
+	var sts = "";
+	for(i=0;i<status_pegawai.length;i++)
+	{
+		splited = status_pegawai[i].split("-");
+		sts 	= sts + splited[0] + "-";
+	}
+	status_pegawai = sts;
+	
+	var pnd = "";
+	for(i=0;i<pendidikan.length;i++)
+	{
+		splits = pendidikan[i].split("-");
+		pnd 	= pnd + splits[0] + "-";
+	}
+	pendidikan = pnd;
+	
+	
 	setTimeout(function(){
-		window.open("{base_url}adm_kepegawaian/print_excel/"+nip+"/"+bulan+"/"+tahun,"Print Excel Absensi","width=200, height=100");
-		$("#loading").fadeOut("fast");
-	},2000);
+		window.open("{base_url}laporan/print_excel/"+lokasi+"/"+golongan+"/"+status_pegawai+"/"+awal_masa_ker+"/"+akhir_masa_ker+"/"+pendidikan,"Print Excel Data Pegawai","width=200, height=100");
+		$("#loading_rekap_pegawai").fadeOut("fast");
+	},1600);
 }
 
 function print_pdf()
@@ -280,12 +309,6 @@ function rekap_pegawai_click()
 	
 }
 
-function penyamaan(val)
-{
-	if($("#akhir").val() == "")
-	{
-		$("#akhir").val(val);
-	}
-}
+
 
 

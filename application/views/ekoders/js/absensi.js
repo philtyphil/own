@@ -195,9 +195,9 @@ function rekap_click()
 {
 	$("#bulan_select").html($("#bulan").val());
 	var data = {
-		"tokenUnit" 	: $("#unit").val(),
-		"bulan"			: $("#bulan_rekap").val(),
-		"tahun"			: $("#tahun_rekap").val()
+		tokenUnit 	: $("#unit").val(),
+		bulan		: $("#bulan_rekap").val(),
+		tahun		: $("#tahun_rekap").val()
 	}
 	var url = "{base_url}adm_kepegawaian/rekap";
 	$.ajax({
