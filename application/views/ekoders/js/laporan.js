@@ -46,6 +46,109 @@ function cancel()
 function print_excel()
 {
 	$("#loading_rekap_pegawai").fadeIn("slow");
+
+	var awal_masa_ker	= ($("#awal").val() != "") ? $("#awal").val() : "null";
+	var akhir_masa_ker	= ($("#akhir").val() != "") ? $("#akhir").val() : "null";
+	var lokasi 			= $("#lokasi_rekap_pegawai").val();
+	var golongan		= $("#golongan_rekap_pegawai").val();
+	var status_pegawai	= $("#status_pegawai_detail").val();
+	var pendidikan		= $("#pendidikan_detail").val();
+	var status_keluarga	= $("#status_keluarga_detail").val();
+	var usia			= ($("#usia").val() != "") ? $("#usia").val() : null;
+	
+	var gol = "";
+	for(i=0;i<golongan.length;i++)
+	{
+		spliting = golongan[i].split("-");
+		gol 	= gol + spliting[0] + "-";
+	}
+	golongan = gol;//back to default define;
+	
+	var sts = "";
+	for(i=0;i<status_pegawai.length;i++)
+	{
+		splited = status_pegawai[i].split("-");
+		sts 	= sts + splited[0] + "-";
+	}
+	status_pegawai = sts;
+	
+	var stk = "";
+	for(i=0;i<status_keluarga.length;i++)
+	{
+		splited = status_keluarga[i].split("-");
+		stk 	= stk + splited[0] + "-";
+	}
+	status_keluarga = stk;
+	
+	var pnd = "";
+	for(i=0;i<pendidikan.length;i++)
+	{
+		splits = pendidikan[i].split("-");
+		pnd 	= pnd + splits[0] + "-";
+	}
+	pendidikan = pnd;
+	
+	setTimeout(function(){
+		window.open("{base_url}laporan/print_excel/"+lokasi+"/"+golongan+"/"+status_pegawai+"/"+awal_masa_ker+"/"+akhir_masa_ker+"/"+pendidikan+"/"+status_keluarga+"/"+usia,"Print Excel Data Pegawai","width=200, height=100");
+		$("#loading_rekap_pegawai").fadeOut("fast");
+	},1600);
+}
+
+function print_pdf()
+{
+	$("#loading_rekap_pegawai").fadeIn("slow");
+	var awal_masa_ker	= ($("#awal").val() != "") ? $("#awal").val() : "null";
+	var akhir_masa_ker	= ($("#akhir").val() != "") ? $("#akhir").val() : "null";
+	var lokasi 			= $("#lokasi_rekap_pegawai").val();
+	var golongan		= $("#golongan_rekap_pegawai").val();
+	var status_pegawai	= $("#status_pegawai_detail").val();
+	var pendidikan		= $("#pendidikan_detail").val();
+	var status_keluarga	= $("#status_keluarga_detail").val();
+	var usia			= ($("#usia").val() != "") ? $("#usia").val() : null;
+	
+	var gol = "";
+	for(i=0;i<golongan.length;i++)
+	{
+		spliting = golongan[i].split("-");
+		gol 	= gol + spliting[0] + "-";
+	}
+	golongan = gol;//back to default define;
+	
+	var sts = "";
+	for(i=0;i<status_pegawai.length;i++)
+	{
+		splited = status_pegawai[i].split("-");
+		sts 	= sts + splited[0] + "-";
+	}
+	status_pegawai = sts;
+	
+	var pnd = "";
+	for(i=0;i<pendidikan.length;i++)
+	{
+		splits = pendidikan[i].split("-");
+		pnd 	= pnd + splits[0] + "-";
+	}
+	pendidikan = pnd;
+	
+	var stk = "";
+	for(i=0;i<status_keluarga.length;i++)
+	{
+		splited = status_keluarga[i].split("-");
+		stk 	= stk + splited[0] + "-";
+	}
+	status_keluarga = stk;
+	
+	
+	$("#loading_rekap_pegawai").fadeIn("slow");
+	setTimeout(function(){
+		window.open("{base_url}laporan/print_pdf/"+lokasi+"/"+golongan+"/"+status_pegawai+"/"+awal_masa_ker+"/"+akhir_masa_ker+"/"+pendidikan+"/"+status_keluarga+"/"+usia,"Print PDF Data Pegawai","width=200, height=100");
+		$("#loading").fadeOut("fast");
+	},2000);
+}
+
+function print_html()
+{
+	$("#loading_rekap_pegawai").fadeIn("slow");
 	var lokasi 			= $("#lokasi_rekap_pegawai").val();
 	var golongan		= $("#golongan_rekap_pegawai").val();
 	var status_pegawai	= $("#status_pegawai_detail").val();
@@ -76,36 +179,11 @@ function print_excel()
 		pnd 	= pnd + splits[0] + "-";
 	}
 	pendidikan = pnd;
-	
-	
+	$("#loading_rekap_pegawai").fadeIn("slow");
 	setTimeout(function(){
-		window.open("{base_url}laporan/print_excel/"+lokasi+"/"+golongan+"/"+status_pegawai+"/"+awal_masa_ker+"/"+akhir_masa_ker+"/"+pendidikan,"Print Excel Data Pegawai","width=200, height=100");
+		window.open("{base_url}laporan/print_html/"+lokasi+"/"+golongan+"/"+status_pegawai+"/"+awal_masa_ker+"/"+akhir_masa_ker+"/"+pendidikan,"_blank");
 		$("#loading_rekap_pegawai").fadeOut("fast");
-	},1600);
-}
-
-function print_pdf()
-{
-	var tahun 	= $("#tahun").val();
-	var bulan 	= $("#bulan").val();
-	var nip 	= $("#nip").val();
-	$("#loading").fadeIn("slow");
-	setTimeout(function(){
-		window.open("{base_url}adm_kepegawaian/print_pdf/"+nip+"/"+bulan+"/"+tahun,"Print Excel Absensi","width=400, height=400");
-		$("#loading").fadeOut("fast");
-	},2000);
-}
-
-function print_html()
-{
-	var tahun = $("#tahun").val();
-	var bulan = $("#bulan").val();
-	var nip = $("#nip").val();
-	$("#loading").fadeIn("slow");
-	setTimeout(function(){
-		window.open("{base_url}adm_kepegawaian/print_html/"+nip+"/"+bulan+"/"+tahun,"_blank");
-		$("#loading").fadeOut("fast");
-	},2000);
+	},1500);
 }
 
 function nama_insert_clicked()
@@ -230,13 +308,17 @@ function rekap_pegawai_click()
 	var awal_masa_ker	= $("#awal").val();
 	var akhir_masa_ker	= $("#akhir").val();
 	var pendidikan		= $("#pendidikan_detail").val();
+	var status_keluarga	= $("#status_keluarga_detail").val();
+	var usia			= $("#usia").val();
 	var data = {
 		lokasi : lokasi,
 		golongan : golongan,
 		status_pegawai : status_pegawai,
 		awal:awal_masa_ker,
 		akhir:akhir_masa_ker,
-		pendidikan:pendidikan
+		pendidikan:pendidikan,
+		status_keluarga:status_keluarga,
+		usia:usia
 	};
 	var url = "{base_url}laporan/rekap";
 	$.ajax({
@@ -284,6 +366,13 @@ function rekap_pegawai_click()
 			{
 				$("#loading_insert").fadeOut("slow");
 				bootbox.confirm(e.error_pendidikan, function(result) {
+					$("#loading_rekap_pegawai").fadeOut("slow");
+				});
+			}
+			else if(e.error_status_keluarga != "" && typeof(e.error_status_keluarga) != "undefined")
+			{
+				$("#loading_insert").fadeOut("slow");
+				bootbox.confirm(e.error_status_keluarga, function(result) {
 					$("#loading_rekap_pegawai").fadeOut("slow");
 				});
 			}

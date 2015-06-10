@@ -32,6 +32,7 @@ class Laporan extends CI_Controller {
 			$data['golongan']		= $this->laporan_model->get_golongan();
 			$data['status_pegawai']	= $this->laporan_model->get_status_pegawai();
 			$data['pendidikan']		= $this->laporan_model->get_pendidikan_pegawai();
+			$data['status_keluarga'] = $this->laporan_model->get_keluarga_pegawai();
 			render('laporan',$data,"laporan");
 		}
 		else
@@ -183,10 +184,12 @@ class Laporan extends CI_Controller {
 		$status_pegawai	= decode($this->uri->segment(5));
 		$pendidikan		= decode($this->uri->segment(6));
 		$masa_kerja		= decode($this->uri->segment(7));
+		$status_keluarga= decode($this->uri->segment(8));
+		$usia			= decode($this->uri->segment(9));
 		
 		// Prepare Data to Load Datatable
 		$this->load->model('laporan_model');
-		$data = $this->laporan_model->json_dt($_GET,$lokasi,$golongan,$status_pegawai,$pendidikan,$masa_kerja);
+		$data = $this->laporan_model->json_dt($_GET,$lokasi,$golongan,$status_pegawai,$pendidikan,$masa_kerja,$status_keluarga,$usia);
 		
 		if(is_array($data))
 		{
@@ -240,6 +243,8 @@ class Laporan extends CI_Controller {
 			$this->form_validation->set_rules('awal', 'Masa Kerja (Awal)', 'trim|max_length[2]|numeric');
 			$this->form_validation->set_rules('akhir', 'Masa Kerja (Akhir)', 'trim|max_length[2]|numeric');
 			$this->form_validation->set_rules('pendidikan[]', 'Pendidikan', 'trim|required');
+			$this->form_validation->set_rules('status_keluarga[]', 'Status Keluarga', 'trim|required');
+			$this->form_validation->set_rules('usia[]', 'Usia', 'trim|numeric');
 		
 			if($this->form_validation->run() == FALSE)
 			{
@@ -252,6 +257,9 @@ class Laporan extends CI_Controller {
 				}
 				if(validation_errors('status_pegawai')!=NULL){
 					$view['error_status_pegawai'] = strip_tags(form_error('status_pegawai'));
+				}
+				if(validation_errors('status_keluarga')!=NULL){
+					$view['error_status_keluarga'] = strip_tags(form_error('status_keluarga'));
 				}
 				if(validation_errors('awal')!=NULL){
 					$view['error_awal'] = strip_tags(form_error('awal'));
@@ -297,6 +305,16 @@ class Laporan extends CI_Controller {
 						$pendidikan .= $value ."|";
 					}
 				}
+				
+				$status_keluarga = $this->input->post('status_keluarga');
+				if(is_array($this->input->post('pendidikan')))
+				{
+					$status_keluarga = "";
+					foreach($this->input->post('status_keluarga') as $key => $value)
+					{
+						$status_keluarga .= $value ."|";
+					}
+				}
 		
 				$masa_kerja = ($this->input->post('akhir') == "" && $this->input->post('awal') != "") ? $this->input->post('awal')."-".$this->input->post('awal') : $this->input->post('awal')."-".$this->input->post('akhir');
 			
@@ -304,7 +322,9 @@ class Laporan extends CI_Controller {
 				$buff['golongan']				= encode($golongan);
 				$buff['status_pegawai']			= encode($status_pegawai);
 				$buff['pendidikan']				= encode($pendidikan);
+				$buff['status_keluarga']		= encode($status_keluarga);
 				$buff['masa_kerja']				= encode($masa_kerja);
+				$buff['usia']					= encode($this->input->post('usia'));
 				$buff['base_url']				= config_item('base_url');
 				$buff['template']				= template();
 				$view['table_rekap_pegawai']	= $this->parser->parse(template().'/jLoadpage/laporan_content.html',$buff);
@@ -333,14 +353,16 @@ class Laporan extends CI_Controller {
 		$awal_masa_ker 	= $this->uri->segment(6);
 		$akhir_masa_ker = $this->uri->segment(7);
 		$pendidikan 	= $this->uri->segment(8);
+		$status_keluarga= $this->uri->segment(9);
+		$usia			= $this->uri->segment(10);
 		$this->load->library('menuroleaccess');
 		$auth_page = $this->menuroleaccess->check_access("laporan");
 		if($auth_page) 
 		{
-			$masa_kerja = ($this->input->post('akhir') == "null" && $this->input->post('awal') != "null") ? $this->input->post('awal')."-".$this->input->post('awal') : $this->input->post('awal')."-".$this->input->post('akhir');
+			//$masa_kerja = ($akhir_masa_ker == "null" && $awal_masa_ker != "null") ? $awal_masa_ker."-".$this->input->post('awal') : $this->input->post('awal')."-".$akhir_masa_ker;
 			
 			$this->load->model('laporan_model');
-			$data	= $this->laporan_model->get_data_cetak($lokasi,$golongan,$status_pegawai,$awal_masa_ker,$akhir_masa_ker,$pendidikan);
+			$data	= $this->laporan_model->get_data_cetak($lokasi,$golongan,$status_pegawai,$awal_masa_ker,$akhir_masa_ker,$pendidikan,$status_keluarga,$usia);
 			
 			$this->load->library('Excel');  
 			// Create new PHPExcel object  
@@ -356,7 +378,6 @@ class Laporan extends CI_Controller {
 			$objPHPExcel->getActiveSheet()->getColumnDimension('H')->setWidth(7);
 			$objPHPExcel->getActiveSheet()->getColumnDimension('I')->setWidth(19);
 			$objPHPExcel->getActiveSheet()->getColumnDimension('J')->setWidth(17);
-			$objPHPExcel->getActiveSheet()->getRowDimension('7')->setRowHeight(35);
 			$objPHPExcel->getActiveSheet()->getStyle('A2')->getFont()->setBold(true);
 			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A2',"DATA PEGAWAI BGR INDONESIA");
 			
@@ -401,7 +422,7 @@ class Laporan extends CI_Controller {
 			}
 			
 			/* :set Pendidikani HEADER */
-			if(isset($pendidikan) && $pendidikan != '' && $pendidikan != "-")
+			if(isset($pendidikan) && $pendidikan != '' && $pendidikan != "ALL-")
 			{
 				$defGol = $this->laporan_model->special_pendidikan_pegawai($pendidikan);
 				$pendidikan = "";
@@ -419,14 +440,18 @@ class Laporan extends CI_Controller {
 			}
 			
 			$col = "A";$rowdefault++;
-//			$styleCenter = array(
-//					'alignment' => array(
-//						'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-//						'vertical' => PHPExcel_Style_Alignment::VERTICAL_CENTER,
-//					)
-//				);
+			$styleCenter = array(
+					'alignment' => array(
+						'horizontal' => PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+						'vertical' => PHPExcel_Style_Alignment::VERTICAL_CENTER,
+					)
+				);
 
 			
+			// :set It To Center On Vertical Or Horizontal - @philtyphils
+			$objPHPExcel->getActiveSheet()->getStyle("A".$rowdefault.":J".$rowdefault)->applyFromArray($styleCenter);
+			// :set Row Height - @philtyphils
+			$objPHPExcel->getActiveSheet()->getRowDimension($rowdefault)->setRowHeight(35);
 			$objPHPExcel->setActiveSheetIndex(0)->setCellValue($col.$rowdefault,"Golongan");
 			$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault)->getFont()->setBold(true);
 			$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.$rowdefault,"NIK");
@@ -450,7 +475,7 @@ class Laporan extends CI_Controller {
 			$col = "A";$rowdefault++;
 				//* Freeze **//
 			$objPHPExcel->getActiveSheet()->freezePane($col.$rowdefault);
-			//$objPHPExcel->getActiveSheet()->getStyle($col.$rowdefault.":J".$rowdefault)->applyFromArray($styleCenter);
+			
 			foreach($data as $key => $value)
 			{
 				$time = explode(".",$value['masa_kerja']);
@@ -519,19 +544,25 @@ class Laporan extends CI_Controller {
 	public function print_pdf()
 	{	
 		$this->load->library('menuroleaccess');
-		$auth_page = $this->menuroleaccess->check_access("adm_kepegawaian");
+		$auth_page = $this->menuroleaccess->check_access("laporan");
 		if($auth_page)
 		{
 			$this->load->library('outpdf');$this->load->model('absensi_model');
-			$nip 		= $this->uri->segment(3);
-			$bulan 		= $this->uri->segment(4);
-			$tahun 		= $this->uri->segment(5);
-			$tanggal 	= $tahun."-".$bulan."-01";
-			$max_date 	= date('t',strtotime($tanggal));
-			$data		= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
-			$cetak 		= cetak_absen($nip,$bulan,$tahun,$data);
+			$lokasi 		= $this->uri->segment(3);
+			$golongan 		= $this->uri->segment(4);
+			$status_pegawai = $this->uri->segment(5);
+			$awal_masa_ker 	= $this->uri->segment(6);
+			$akhir_masa_ker = $this->uri->segment(7);
+			$pendidikan 	= $this->uri->segment(8);
+			$status_keluarga= $this->uri->segment(9);
+			$usia			= $this->uri->segment(10);
+			//$masa_kerja 	= ($this->input->post('akhir') == "null" && $this->input->post('awal') != "null") ? $this->input->post('awal')."-".$this->input->post('awal') : $this->input->post('awal')."-".$this->input->post('akhir');
+			
+			$this->load->model('laporan_model');
+			$data		= $this->laporan_model->get_data_cetak($lokasi,$golongan,$status_pegawai,$awal_masa_ker,$akhir_masa_ker,$pendidikan,$status_keluarga,$usia);
+			$cetak 		= cetak_rekap($data);
 			$pdf 		= new Outpdf();
-			$pdf->out($cetak, FALSE, 'absensi_bulanan.pdf', 'P');
+			$pdf->out($cetak, FALSE, 'laporan_bulanan.pdf', 'P');
 			exit();
 		}
 		else
@@ -544,15 +575,19 @@ class Laporan extends CI_Controller {
 	 * Print HTML
 	 */
 	public function print_html()
-	{
-		$this->load->model('absensi_model');
-		$nip 		= decode($this->uri->segment(3));
-		$bulan 		= $this->uri->segment(4);
-		$tahun 		= $this->uri->segment(5);
-		$tanggal 	= $tahun."-".$bulan."-01";
-		$max_date 	= date('t',strtotime($tanggal));
-		$data		= $this->absensi_model->get_absensi($nip,$tahun,$bulan,$max_date);
-		$cetak 		= cetak_absen($nip,$bulan,$tahun,$data);
+	{		
+		$lokasi 		= $this->uri->segment(3);
+		$golongan 		= $this->uri->segment(4);
+		$status_pegawai = $this->uri->segment(5);
+		$awal_masa_ker 	= $this->uri->segment(6);
+		$akhir_masa_ker = $this->uri->segment(7);
+		$pendidikan 	= $this->uri->segment(8);
+
+		$masa_kerja = ($this->input->post('akhir') == "null" && $this->input->post('awal') != "null") ? $this->input->post('awal')."-".$this->input->post('awal') : $this->input->post('awal')."-".$this->input->post('akhir');
+
+		$this->load->model('laporan_model');
+		$data		= $this->laporan_model->get_data_cetak($lokasi,$golongan,$status_pegawai,$awal_masa_ker,$akhir_masa_ker,$pendidikan);
+		$cetak 		= cetak_rekap($data);
 		echo $cetak;
 		exit();
 	}

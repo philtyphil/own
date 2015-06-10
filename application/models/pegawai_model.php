@@ -1,5 +1,5 @@
 <?php
-class Laporan_model extends CI_Model{
+class Pegawai_model extends CI_Model{
 	private $db;
 	function __construct()
 	{
@@ -45,68 +45,13 @@ class Laporan_model extends CI_Model{
 		
 	}
 	
-	/**
-	 * [[Description]]
-	 * @param [[Type]] $lokasi         Lokasi Pegawai
-	 * @param [[Type]] $golongan       Golongan pegawai (yg akan di tampilkan)
-	 * @param [[Type]] $status_pegawai status Pegawai Contoh Pegawai Tetap
-	 * @param [[Type]] $tahun          tahun
-	 */
-	function json_datatable($request,$lokasi,$golongan,$status_pegawai,$tahun)
-	{
-		$columns = array('gol','fld_empnik','fld_empnm','fld_empbod','sex','pddk','stskel','loknm','lokkerja');
-		
-		// order
-		$this->db->order_by('gol',"desc");
-		$this->db->order_by('fld_empnm',"asc");
-		$this->db->limit(0,10);
-		//single where
-		if(isset($request['search']['value']) && $request['search']['value'] != "")
-		{
-			for($i=0;$i<count($request['columns']);$i++)
-			{
-				$this->db->like($columns[$i],$request['search']['value']);
-			}
-		}
-		
-		
-		$this->db->select($columns);
-		$output = $this->db->get('views_data_pegawai');
-		foreach($output->result_array() as $key=> $value)
-		{
-			$row 	= array();
-			$row[] 	= $value['gol'];
-			$row[] 	= $value['fld_empnik'];
-			$row[] 	= $value['fld_empnm'];
-			$row[] 	= $value['fld_empbod'];
-			$row[] 	= $value['sex'];
-			$row[] 	= $value['pddk'];
-			$row[] 	= $value['stskel'];
-			$row[] 	= $value['loknm'];
-			$row[] 	= $value['lokkerja'];
-			$set[] 	= $row;
-			
-		}
-		$all = $this->db->count_all_results('view_data_pegawai');
-	
-		return array(
-			"draw"            => intval( $request['draw'] ),
-			"recordsTotal"    => intval( $all ),
-			"recordsFiltered" => intval( $output->num_rows() ),
-			"data"            => $set
-		);
-		return $output;
-		
-	}
-	
-	function json_dt($request,$lokasi,$golongan,$status_pegawai,$pendidikan,$masa_kerja,$status_keluarga,$usia)
+	function json_data_pegawai($request,$lokasi,$nik = "",$nama ="")
 	{
 		// Define Showing Field - @philtyphils
-		$columns = array('id_golongan','fld_empnik','fld_empnm','fld_empbod','sex','id_status_peg','id_pendidikan','id_status_keluarga','loknm','masa_kerja','gol','stskel','stspeg','pddk');
+		$columns = array('id_golongan','fld_empnik','fld_empnm','fld_empbod','unit_kerja','lokkerja','pos','loknm','stspeg','id_lokasi','gol');
 		
 		// Define Selected Table - @philtyphils
 		$sTable  = "view_data_pegawai";
-		
 		// Define Limit - @philtyphils
 		if(isset($request['start']) && $request['start'] != "" && $request['length'] != '')
 		{
@@ -129,7 +74,7 @@ class Laporan_model extends CI_Model{
 			
 			if(trim($order) == "ORDER BY")
 			{
-				$order = " ORDER BY id_golongan desc, fld_empnm asc ";
+				$order = " ORDER BY fld_empnm asc ";
 			}
 		}
 		unset($col);
@@ -158,48 +103,39 @@ class Laporan_model extends CI_Model{
 			
 		}
 		
+		
+		
 		/*
 		* Extra Condition From Selection of Form - @philtyphils
 		*/
-		if($where == "") $where =  " WHERE (";
-		// Including Condition Golongan - @philtyphils
-		if(isset($golongan) && $golongan != "" && strpos($golongan,"ALL") === false)
-		{
-			if($where != " WHERE (")
-			{
-				$where .= " AND (";
-			}
-			
-			$exp = explode("|",$golongan);
-			
-			for($i=0;$i<count($exp) - 1;$i++)
-			{
-				$gol	= explode("-",$exp[$i]);
-				$where .= " id_golongan = ".$gol[0] . " OR ";
-			}
-			$where = substr_replace( $where, "", -4 );
-			$where .= " ) ";
-		}
+		if($where == "") $where =  " WHERE (";$filter = false;
 		
-		// Including Condition Status Pegawai - @philtyphils
-		if(isset($status_pegawai) && $status_pegawai != "" && strpos($status_pegawai,"ALL") === false)
+		$where_is = $request['columns'];
+		foreach($where_is as $key => $value)
 		{
-			if($where != " WHERE (")
-			{
-				$where .= " AND (";
-			}
-		
-			$exp = explode("|",$status_pegawai);
-
-			for($i=0;$i<count($exp) -1;$i++)
-			{
+			$search = $value['search'];
+			if($search['value'] != "" || !empty($search['value']))
+		   {
+				$filter = true;
+				if($where != " WHERE (")
+				{
+					$where .= " AND (";
+					$where .= $columns[$value['data']] . " LIKE '%".$search['value'] . "%' OR";
+				}
+				else
+				{
+					$where .= $columns[$value['data']] . " LIKE '%".$search['value']  . "%' OR ";
+				}
 				
-				$where .= "id_status_peg = " .$exp[$i].  " OR ";
-			}
-			$where = substr_replace( $where, "", -4 );
-			$where .= " ) ";
-			
+		   }
 		}
+		if($filter)
+		{
+			$where = substr_replace( $where, "", -3 );
+			$where .= " ) ";
+			unset($filter);
+		}
+		
 		
 		// Including Condition Lokasi Pegawai - @philtyphils
 		if(isset($lokasi) && $lokasi != "")
@@ -217,76 +153,33 @@ class Laporan_model extends CI_Model{
 			
 		}
 		
-		// Including Condition Usia Pegawai - @philtyphils
-		if(isset($usia) && $usia != "")
+		if(isset($nik) && $nik != "")
 		{
 			if($where != " WHERE (")
 			{
 				$where .= " AND (";
-				$where .= "TIMESTAMPDIFF(YEAR,fld_empbod,NOW()) = ".$usia . ") ";
+				$where .= " fld_empnik LIKE '$".$nik . "%') ";
 			}
 			else
 			{
-				$where .= "TIMESTAMPDIFF(YEAR,fld_empbod,NOW()) = ".$usia . ") ";
+				$where .= " fld_empnik LIKE '%". $nik . "%') ";
 			}
-
 		}
-
-		// Including Condition Pendidikan Pegawai - @philtyphils
-		if(isset($pendidikan) && $pendidikan != "" && strpos($pendidikan,"ALL") === false)
+		
+		if(isset($nama) && $nama != "")
 		{
 			if($where != " WHERE (")
 			{
 				$where .= " AND (";
+				$where .= " fld_empnm LIKE '$".$nama . "%') ";
 			}
-			
-			$exp = explode("|",$pendidikan);
-		
-			for($i=0;$i<count($exp) - 1;$i++)
+			else
 			{
-				
-				$where .= "id_pendidikan = " .$exp[$i].  " OR ";
+				$where .= " fld_empnm LIKE '%". $nama . "%') ";
 			}
-			$where = substr_replace( $where, "", -4 );
-			$where .= " ) ";
-			
 		}
-
-		// Including Condition Masa Kerja Pegawai - @Philtyphils
-		if(isset($masa_kerja) && trim($masa_kerja) != "-")
-		{
-			$tahun = explode("-",$masa_kerja);
-			
-			if((isset($tahun[0]) && $tahun[0] != "") && (isset($tahun[1]) && $tahun[1] != ""))
-			{
-				if($where != " WHERE (")
-				{
-					$where .= " AND (";
-				}
-				$where .= " FLOOR(masa_kerja) >= ".$tahun[0]." AND FLOOR(masa_kerja) <= ".$tahun[1];
-				$where .= " ) ";
-			}
- 		}
 		
-		// Including Condition Status Pegawai - @philtyphils
-		if(isset($status_keluarga) && $status_keluarga != "" && strpos($status_keluarga,"ALL") === false)
-		{
-			if($where != " WHERE (")
-			{
-				$where .= " AND (";
-			}
-		
-			$exp = explode("|",$status_keluarga);
-
-			for($i=0;$i<count($exp) -1;$i++)
-			{
-				
-				$where .= "id_status_keluarga = " .$exp[$i].  " OR ";
-			}
-			$where = substr_replace( $where, "", -4 );
-			$where .= " ) ";
-			
-		}
+	
  		//Execution Query
 		unset($exp);
 		$query = "SELECT ".str_replace(" , ", " ", implode(", ", $columns))." FROM ".$sTable." 
@@ -318,12 +211,17 @@ class Laporan_model extends CI_Model{
 			$row[] 	= "<small>" . $value['fld_empnik'] . "</small>";
 			$row[] 	= "<small>" . $value['fld_empnm'] . "</small>";
 			$row[] 	= "<small>" . $value['fld_empbod'] . "</small>";
-			$row[] 	= "<small>" . $value['sex'] . "</small>";
+			$row[] 	= "<small>" . $value['unit_kerja'] . "</small>";
+			$row[] 	= "<small>" . $value['lokkerja'] . "</small>";
+			$row[] 	= "<small>" . $value['pos'] . "</small>";
 			$row[] 	= "<small>" . $value['stspeg'] . "</small>";
-			$row[] 	= "<small>" . $value['pddk'] . "</small>";
-			$row[] 	= "<small>" . $value['stskel'] . "</small>";
-			$row[] 	= "<small>" . $value['loknm'] . "</small>";
-			$row[] 	= "<small>" . $masa_kerja."</small>";
+			
+			// :set Edit Button - @Philtyphils
+			$button	= '<a href='.config_item('base_url').'pegawai/edit/'.encode($value['fld_empnik']).'/" ><button type="button" title="Edit Pegawai" class="btn btn-info btn-xs btn-circle btn-line"><i class="fa fa-pencil icon-only"> </i></button></a>&nbsp;|&nbsp;';
+			
+			// :set Delete Button - @Philtyphils
+			$button	.= '<a href="#" ><button type="button"  title="Delete Pegawai" class="btn btn-primary btn-xs btn-circle btn-line"><i class="fa fa-trash-o icon-only"></i></button></a>'; 
+			$row[]  = $button;
 			$set[] 	= $row;
 			
 		}
@@ -633,6 +531,60 @@ class Laporan_model extends CI_Model{
 	function get_keluarga_pegawai()
 	{
 		$data = $this->db->where('fld_tyid',"23")->get('tbl_tyval');
+		if($data->num_rows > 0)
+		{
+			return $data->result_array();
+		}
+		else
+		{
+			return array();
+		}
+	}
+	
+	function get_agama()
+	{
+		$data = $this->db->where('fld_tyid',"16")->get('tbl_tyval');
+		if($data->num_rows > 0)
+		{
+			return $data->result_array();
+		}
+		else
+		{
+			return array();
+		}
+	}
+	
+	function get_kota()
+	{
+		$data = $this->db->get('tbl_city');
+		if($data->num_rows > 0)
+		{
+			return $data->result_array();
+		}
+		else
+		{
+			return array();
+		}
+	}
+	
+	function get_provinsi()
+	{
+		$data = $this->db->order_by('fld_pulau',"ASC")->order_by('fld_provenm',"ASC")->get('tbl_prove');
+		if($data->num_rows > 0)
+		{
+			return $data->result_array();
+		}
+		else
+		{
+			return array();
+		}
+		
+	}
+	
+	function get_lokasi_peg()
+	{
+		$sql 	= "SELECT concat(loktp, ' - ', loknm) as `lokasi`, `lokcd` FROM `tbl_lokasi`";
+		$data = $this->db->query($sql);
 		if($data->num_rows > 0)
 		{
 			return $data->result_array();

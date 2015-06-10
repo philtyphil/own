@@ -195,7 +195,7 @@ function rekap_click()
 {
 	$("#bulan_select").html($("#bulan").val());
 	var data = {
-		tokenUnit 	: $("#unit").val(),
+		tokenUnit 	: $("#tokenUnit").val(),
 		bulan		: $("#bulan_rekap").val(),
 		tahun		: $("#tahun_rekap").val()
 	}
@@ -223,3 +223,19 @@ function rekap_click()
 		}
 	});
 }
+
+function print_rekap_excel()
+{
+	
+	var tokenUnit 	= $("#unit").val();
+	var bulan		= $("#bulan_rekap").val();
+	var tahun		= $("#tahun_rekap").val();
+	$("#loading").fadeIn("slow");
+	setTimeout(function(){
+		window.open("{base_url}adm_kepegawaian/print_rekap_excel/"+tokenUnit+"/"+bulan+"/"+tahun,"Print Excel Rekap Absensi","width=400, height=400");
+		$("#loading").fadeOut("fast");
+	},2000);
+			
+}
+		
+	

@@ -38,6 +38,23 @@ class Management_site extends CI_Controller {
 			redirect(config_item('base_url'));
 		}
 	}
+	
+	public function menu()
+	{
+		$this->load->helper('url');
+		$this->load->library('menuroleaccess');
+	
+		$auth_page = $this->menuroleaccess->check_access("management_site");
+		if($auth_page) 
+		{
+			/** Success Login **/
+			$data['sForm'] 		= "Management Site: Menu";
+			$data['title'] 		= "Management Site Menu - Menu Role Access";
+			render('management_site_menu',$data,"management_site");
+			
+		}
+		
+	}
 
 }
 

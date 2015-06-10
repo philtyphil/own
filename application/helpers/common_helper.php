@@ -14,6 +14,16 @@ function render($view,$data='',$js='',$layout='frame'){
 
 	}
 	
+	// set Menu *Unlimited Menus*
+	$CI->data['menu'] = $CI->session->userdata('menus');
+	if(!isset($menu) || empty($menu) || $menu == "" )
+	{
+		$CI->load->model('frame_model');
+		$CI->data['menu'] = $CI->frame_model->set_menu();
+		$CI->session->set_userdata(array('menus' => $CI->data['menu']));
+	}
+	
+	
 	if(is_array($data)){
 		$CI->data = array_merge($CI->data,$data);
 	}
@@ -67,6 +77,77 @@ function decode($str)
 	}
 	$str_decode = $CI->encrypt->decode($data);
 	return $str_decode;
+}
+
+function cetak_rekap($row) {
+	$CI =& get_instance();
+	$string = <<<EOT
+<table width="100%" border="0" cellspacing="0" cellpadding="2">
+  <tr>
+    <td colspan="2"><div align="center">
+			<h6>BHANA GHARA REKSA</h6>    
+    </div></td>
+  </tr>
+  <tr>
+    <td width="50%"><small>DATA PEGAWAI BGR</small></td>
+    <td width="50%"></td>
+  </tr>
+  
+  
+</table>
+<table width="100%" border="1" cellspacing="0" cellpadding="3">
+  <thead>
+EOT;
+        $string .= '
+<tr>
+
+    <th align="center" width="5%"><small>Gol.</small></th>
+    <th align="center" width="10%"><small>NIK</small></th>
+    <th align="center" width="15%"><small>Nama Pegawai</small></th>
+    <th align="center" width="11%"><small>Tgl. Lahir</small></th>
+    <th align="center" width="13%"><small>Jns. Kelamin</small></th>
+    <th align="center" width="13%"><small>Sts. Peg.</small></th>
+    <th align="center" width="5%"><small>Pend.</small></th>
+    <th align="center" width="5%"><small>Sts. Kel.</small></th>
+    <th align="center" width="11%"><small>Lokasi</small></th>
+    <th align="center" width="11%"><small>Masa Kerja</small></th>
+</tr>
+';
+	$string .= "</thead><tbody>";
+	$rows = 1;
+	foreach($row as $key=> $value)
+	{
+		if(isset($value['masa_kerja']))
+			{
+				$time = explode(".",$value['masa_kerja']);
+				if(count($time) > 0)
+				{
+					$tahun = $time[0] . " Tahun<br/>";
+					$bulan = substr($time[1],1,1) . " Bulan";
+				}
+
+				$masa_kerja =  $tahun . $bulan;
+
+			}
+		$string .= "<tr>
+		<td width=\"5%\"><small>".$value['gol']."</small></td>
+		<td align=\"center\" width=\"10%\"><small>".$value['fld_empnik']."</small></td>
+		<td align=\"center\" width=\"15%\"><small>".$value['fld_empnm']."</small></td>
+		<td align=\"center\" width=\"11%\"><small>".$value['fld_empbod']."</small></td>
+		<td align=\"center\" width=\"13%\"><small>".$value['sex']."</small></td>
+		<td align=\"center\" width=\"13%\"><small>".$value['stspeg']."</small></td>
+		<td align=\"center\" width=\"5%\"><small>".$value['pddk']."</small></td>
+		<td align=\"center\" width=\"5%\"><small>".$value['stskel']."</small></td>
+		<td align=\"center\" width=\"11%\"><small>".$value['loknm']."</small></td>
+		<td align=\"center\" width=\"11%\"><small>".$masa_kerja."</small></td>
+		</tr>";
+	}
+  
+  
+	$string .= "</tbody></table><br/><br/><small>*dicetak pada tanggal: ".date("d M Y H:i:s")."<small>";
+ 
+  
+        return $string;
 }
 
 function cetak_absen($nip,$bulan,$tahun,$row) {
@@ -137,8 +218,7 @@ EOT;
  
   
         return $string;
-    }
-
+ }
 function hari_indo($time)
 {
 	$date_list = array('Sunday' => "Minggu",'Monday' => "Senin", 'Tuesday'=>"Selasa",'Wednesday' => "Rabu",'Thursday' => "Kamis", 'Friday' => "Jumat",'Saturday' => "Sabtu");

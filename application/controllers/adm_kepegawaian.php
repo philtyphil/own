@@ -18,6 +18,7 @@ class Adm_kepegawaian extends CI_Controller {
 	
 	public function index()
 	{
+		
 		$this->load->helper('url');
 		$this->load->library('menuroleaccess');
 		$auth_page = $this->menuroleaccess->check_access("adm_kepegawaian");
@@ -92,7 +93,14 @@ class Adm_kepegawaian extends CI_Controller {
 	
 	public function cuti()
 	{
-		
+		$this->load->library('menuroleaccess');
+		$auth_page = $this->menuroleaccess->check_access("adm_kepegawaian");
+		if($auth_page) 
+		{
+			$data['sForm'] 		= "Cuti";
+			$data['title'] 		= "Pengajuan CUTI";
+			render('cuti',$data,"cuti");
+		}
 	}
 	
 	public function insert()
@@ -191,7 +199,10 @@ class Adm_kepegawaian extends CI_Controller {
 		$bulan 	= decode($this->input->post('bulan'));
 		$tahun	= decode($this->input->post('tahun'));
 		$this->load->model('absensi_model');
-		$get	= $this->absensi_model->get_absensi_rekap($lokasi);
+		$get	= $this->absensi_model->get_absensi_rekap($lokasi,$bulan,$tahun);
+		$buff['rekapan'] 	= $get;
+		$buff['hari']		= array('Sunday' => "Minggu",'Monday' => "Senin", 'Tuesday'=>"Selasa",'Wednesday' => "Rabu",'Thursday' => "Kamis", 'Friday' => "Jumat",'Saturday' => "Sabtu");
+		$view['table_rekap']  = $this->parser->parse(template().'/jLoadpage/absensi_rekap_content.html',$buff);
 	}
 	
 	public function print_excel()
@@ -325,6 +336,188 @@ class Adm_kepegawaian extends CI_Controller {
 		echo $cetak;
 		exit();
 	}
+	
+	public function print_rekap_excel()
+	{
+		$unit 		= decode($this->uri->segment(3));
+		$bulan 		= decode($this->uri->segment(4));
+		$tahun 		= $this->uri->segment(5);
+		$this->load->library('menuroleaccess');
+		$auth_page = $this->menuroleaccess->check_access("adm_kepegawaian");
+		if($auth_page) 
+		{
+			$this->load->model('absensi_model');
+			/* Get Data First */
+			$tanggal 		= $tahun."-".$bulan."-01";
+			$max_date 		= date('t',strtotime($tanggal));
+			$data		= $this->absensi_model->get_absensi_rekap($unit,$bulan,$tahun,$max_date);
+		
+			$last_day	= date('t',strtotime($tahun."-".$bulan."-01"));
+			
+			
+			$this->load->library('Excel');  
+		
+			// Create new PHPExcel object  
+			$objPHPExcel = new PHPExcel();  
+			/* Set Width column */
+			$style_cat = array(
+						'fill' => array(
+							'type' => PHPExcel_Style_Fill::FILL_SOLID,
+							'color' => array('rgb' => 'B7DEE8')
+						)
+					);
+			$other = array(
+						'fill' => array(
+							'type' => PHPExcel_Style_Fill::FILL_NONE
+						)
+					);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('A')->setWidth(12);
+			$objPHPExcel->getActiveSheet()->getColumnDimension('B')->setWidth(25);
+			$objPHPExcel->getActiveSheet()->getStyle('A2')->getFont()->setBold(true);
+			$objPHPExcel->getActiveSheet()->getStyle('A3')->getFont()->setBold(true);
+			
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A2',"REKAP ABSENSI PEGAWAI");
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A3',date('F',strtotime($tahun."-".$bulan."-01")) . " " .$tahun);
+		
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('A7',"NIK");
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('B7',"NAMA");
+			$objPHPExcel->setActiveSheetIndex(0)->setCellValue('C7',bulan_indonesia($bulan)." ".$tahun);
+			$objPHPExcel->getActiveSheet()->mergeCells('A7:A9');
+			$objPHPExcel->getActiveSheet()->mergeCells('B7:B9');
+			$objPHPExcel->getActiveSheet()->freezePane('C7');
+			$col = "C";
+			for($i = 1;$i<=$last_day;$i++)
+			{
+				if($i % 2 )
+				{
+					$cat = $other;
+				}
+				else
+				{
+					$cat = $style_cat;
+				}
+				
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($col.'8',$i. " " .bulan_indonesia($bulan). " ".$tahun);
+				$objPHPExcel->setActiveSheetIndex(0)->getStyle($col.'8')->applyFromArray($cat);
+				$start = $col;$end = $col;
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue($col.'9',"DATANG");
+				$objPHPExcel->setActiveSheetIndex(0)->getStyle($col.'9')->applyFromArray($cat);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.'9',"PULANG");
+				$objPHPExcel->setActiveSheetIndex(0)->getStyle($col.'9')->applyFromArray($cat);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.'9',"TL");
+				$objPHPExcel->setActiveSheetIndex(0)->getStyle($col.'9')->applyFromArray($cat);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.'9',"PSW");
+				$objPHPExcel->setActiveSheetIndex(0)->getStyle($col.'9')->applyFromArray($cat);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.'9',"DL");
+				$objPHPExcel->setActiveSheetIndex(0)->getStyle($col.'9')->applyFromArray($cat);
+				$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$col.'9',"KET");
+				$objPHPExcel->setActiveSheetIndex(0)->getStyle($col.'9')->applyFromArray($cat);
+				$objPHPExcel->getActiveSheet()->getColumnDimension($col)->setWidth(8);
+				$objPHPExcel->getActiveSheet()->getStyle($col.'8')->getFont()->setBold(true);
+				++$col;
+
+	
+					
+
+				
+				for($j=1;$j<=5;$j++)
+				{
+					++$end;
+				}
+				$objPHPExcel->getActiveSheet()->mergeCells($start.'8:'.$end.'8');
+				
+			}
+			$objPHPExcel->getActiveSheet()->mergeCells('C7:'.$col.'7');
+			
+			/** Set Default style **/
+			$styleArray = array(
+				'borders' => array(
+					'allborders' => array(
+						'style' => PHPExcel_Style_Border::BORDER_THIN
+					)
+				)
+			);
+			
+			// Set document properties  
+			$objPHPExcel->getProperties()->setCreator("Sulistyo Nur Anggoro - @philtyphils")  
+				->setLastModifiedBy("philtyphils@gmail.com")  
+				->setTitle("REKAP Absensi Pegawai ".$bulan." ".$tahun)  
+				->setSubject("Office 2007 XLSX Test Document")  
+				->setDescription("Absensi Pegawai")  
+				->setKeywords("BGR - Rekap Absnesi")  
+				->setCategory("Report");  
+				
+			$clm = "10";$row="A";$first =1;$handle_nip = "";	
+			foreach($data as $key => $value)
+			{
+				$value['jam_datang'] = (empty($value['jam_datang']) || $value['jam_datang'] == "") ? "-" : $value['jam_datang'];
+				$value['jam_pulang'] = (empty($value['jam_pulang']) || $value['jam_pulang'] == "") ? "-" : $value['jam_pulang'];
+				$value['TL'] 		 = (empty($value['TL']) || $value['TL'] == "") ? "-" : $value['TL'];
+				$value['PSW'] 		 = (empty($value['PSW']) || $value['PSW'] == "") ? "-" : $value['PSW'];
+				if($handle_nip != $value['nik'] && $first == 1  && $handle_nama != $value['nama'])
+				{
+					$handle_nip 	= $value['nik'];
+					$handle_nama	= $value['nama'];
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($row.$clm,$value['nik']);
+					$objPHPExcel->getActiveSheet()->getStyle($row.$clm)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_TEXT);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['nama']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['jam_datang']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['jam_pulang']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['TL']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['PSW']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"DL");
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"-");
+					$first++;
+					
+				}
+				else if($handle_nip == $value['nik'] && $first != 1 && $handle_nama == $value['nama'])
+				{
+					$handle_nip = $value['nik'];
+					$handle_nama	= $value['nama'];
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['jam_datang'] );
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['jam_pulang']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['TL']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['PSW']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"DL");
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"-");
+					$first++;
+				}
+				else
+				{
+					$row = "A";$clm++;
+					$handle_nip =$value['nik'];
+					$handle_nama	= $value['nama'];
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue($row.$clm,$value['nik']);
+					$objPHPExcel->getActiveSheet()->getStyle($row.$clm)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_TEXT);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['nama']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['jam_datang']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['jam_pulang']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['TL']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,$value['PSW']);
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"DL");
+					$objPHPExcel->setActiveSheetIndex(0)->setCellValue(++$row.$clm,"-");
+					$first++;
+					
+				}
+				
+				
+				
+			}
+
+			// Rename worksheet (worksheet, not filename)  
+			$objPHPExcel->getActiveSheet()->setTitle('Rekap Absensi '.bulan_indonesia($bulan).' '.$tahun);  
+			
+			// Set active sheet index to the first sheet, so Excel opens this as the first sheet  
+			$objPHPExcel->setActiveSheetIndex(0); ob_end_clean();   
+			header('Content-Type: application/octet-stream');
+			header('Content-Disposition: attachment;filename="REKAP ABSENSI '.bulan_indonesia($bulan).' '.$tahun.'.xlsx');  
+			header('Cache-Control: max-age=0');  
+			
+			$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');  
+			$objWriter->save('php://output');  
+			exit();
+		}
+	}
 }
-/* End of file home.php */
-/* Location: ./application/controllers/home.php */
+/* End of file adm_kepeagawaian.php */
+/* Location: ./application/controllers/adm_kepegawaian.php */
