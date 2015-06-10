@@ -65,8 +65,11 @@ class Frame_model extends CI_Model{
 			{
 				$handler = $this->db->where('fld_menuidp',$value['fld_menuid'])->count_all_results('tbl_menu');
 				$arrow 	 = ($handler > 0) ? '<li class="panel"><a href="javascript:;" class="accordion-toggle" data-toggle="collapse"  data-target="#'.$value['fld_menunm'].'"><i class="fa fa-angle-double-right"></i> '.$value['fld_menunm'].'  <span class="fa arrow"></span></a>' : '<li><a href="'.base_url($value['fld_menuurl']).'/" ><i class="fa fa-angle-double-right"></i> '.$value['fld_menunm'].'</a>';
+				
 				$wHtml .= $arrow;
-				$wHtml .= ($handler > 0) ? '<ul class="collapse nav" id="'.$value['fld_menunm'].'">'.$this->get_on_html($value['fld_menuid']) .  $this->get_on_html($value['fld_menuid']) . '</ul>':"";
+				$wHtml .= ($handler > 0) ? '<ul class="collapse nav" id="'.$value['fld_menunm'].'">' : "";
+				$wHtml .= $this->get_on_html($value['fld_menuid']);
+				$wHtml .= ($handler > 0) ?  '</ul>' : "";
 				$wHtml .= "</li>";
 			}
 		}
